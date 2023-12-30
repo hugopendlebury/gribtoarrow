@@ -31,9 +31,9 @@ A sample usage of the Library is given below
         GribToArrow("/Users/hugo/Development/cpp/grib_to_arrow/big.grib")
             .withStations(arrow_stations)
     )
-    data = [pl.from_arrow(message.getDataWithStations2()) for message in reader]
+    data = [pl.from_arrow(message.getDataWithStations()) for message in reader]
     df = pl.concat(data)
-    print(f"done all data extracted {len(df)} rows read from grib")
+    print(f"done all data extracted {len(df)} rows from grib")
     df.write_parquet("/Users/hugo/Development/cpp/grib_to_arrow/output.parquet")
 
 ##Performance
