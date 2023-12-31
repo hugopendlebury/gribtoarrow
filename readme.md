@@ -25,16 +25,16 @@ gribtoarrow (Class)
 
 gribmessage (Class)
     This is an object which will be returned by each iteration of the iterator.
-    This exposes methods such as getData(), getDataWithStations() and many method to get attribute values such as paramId, shortName etc..
+    This exposes methods such as getData(), getDataWithStations() and many methods to get attribute values such as paramId, shortName etc..
 
 
-A sample usage of the Library in python is given below. In this code a referance / config CSV is read with polars.
-The config CSV contains a list of latitude / longitudes where we want to know the equivalent values in the Grib file
+A sample usage of the Library in python is given below. In this code a config CSV is read with polars.
+The CSV contains a list of latitude / longitudes where we want to know the equivalent values in the Grib file.
 e.g. this might be a list of all the major world cities.
 The polars table is converted to arrow and passed to the GribToArrowMethod which returns our reader / iterator object.
 Next a simple list comprehension is used to extract all the details from every message and the results are saved to a parquet file.
 As can been seen a lot of work was accomplished in just 14 lines of python. In addition to the low amount of code required
-we also quick performance.
+we also quick performance. 
 
     import polars as pl
     from gribtoarrow import GribToArrow
@@ -55,8 +55,8 @@ we also quick performance.
 
 ## Performance
 The module is fast since it operates entirely in memory. In addition it releases the GIL to allow python threading. Currently it doesn't 
-use threading in the C++ layer, this is because the author created the project using OSX and the default compiler on OSX doesn't include OMP. 
-Since the main usage is from python it is anticpated the just relasing the GIL will be sufficient.
+use threading in the C++ layer, this is because the author created the project using OSX and the default compiler on OSX doesn't include OMP, this can be done if required although for the reasons detailed below may not be needed. 
+Since the main usage is from python it is anticipated the just releasing the GIL will be sufficient.
 In addition since everything is extracted in memory and made available to arrow and hence the vast ecosystem of tools such as polars and 
 pandas multiprocessing and partitioning of files can be utilised to also achieve parallism.
 A test on a 2023 MacBook Pro extracted 230 million rows from a concatenated grib and wrote this to a parquet file in 6 seconds.
@@ -75,13 +75,13 @@ The values will be used to perform computations on the data. e.g. The underlying
 Grib reader is iterable so can be used in any for loop / generator / list comprehension etc..
 Each iteratation of the reader will return a GribMessage. 
 
-GribMessage provides methods to get attribute based fields and the data.
+GribMessage also provides methods to get attribute based fields and the data.
 
 ## Creating Python module
 
-At the time of writing the project use CMAKE. The paths are currently hardcoded into the CMAKE file so you will need to amend the paths
+At the time of writing the project uses CMAKE. The paths are currently hardcoded into the CMAKE file so you will need to amend the paths
 to match the location of the libraries on your system.
-It is anticipated that this will modified in future to created a smarter CMAKE file or simply remove this and replace it with a more modern
+It is anticipated that this will be modified in future to created a smarter CMAKE file or simply remove this and replace it with a more modern
 build backend and a pyproject.toml file to create a python wheel which can be installed / distributed on PyPi etc...
 
 ### Install Dependencies
@@ -91,10 +91,16 @@ build backend and a pyproject.toml file to create a python wheel which can be in
 - pip install pyarrow (or use venv but remember to activate it when testing)
 - pip install polars (if you want to run the samples / tests). At the lowest level you can intereact with the result using pyArrow or any tools which can interact with the Apache Arrow ecosystem e.g. Pandas / Polars etc..
 
+### Clone This project
+
+Clone this project using git
+
+Then cd into the folder and clone pybind11 at the root level of the folder
+
 ### Clone pybind11
 
 The module is created using pybind11. Rather than adding this as source to this repository you should instead clone the latest version into this 
-repo. This can be done with a command similar to the one below, note it might not be exactly this command git might suggest to use a sub-project.
+repo. This can be done with a command similar to the one below, note it might not be exactly this command git might suggest to use a sub-project, follow the git recommendation.
 
 In the project folder, clone pybind11
 
