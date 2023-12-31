@@ -1,20 +1,31 @@
 ## Goal
 
-GribToArrow is a C / C++ project which uses C++20 and creates a python module to simplify working with files in the Grib Format.
+GribToArrow is a C / C++ project which uses C++20 and creates a python module to simplify working with files in the GRIB Format 
+(GRIdded Binary or General Regularly-distributed Information in Binary form).
 
-Under the hood it uses the ECMWF eccodes library. This is wrapped in C++ and exposed to python via the library pybind11 and apache arrow.
+Under the hood it uses the ECMWF eccodes library. This is wrapped in C++ and exposed to python via the library pybind11 and Apache Arrow. If
+you want a simple pythonic way to interact with GRIB data then give this module a try.
 
-Having worked with Meterologic data using the ECMWF tooling for a while I became familar with the structure of Grib files and many of the 
-command line tools. However extracting the data was a pain due to having to rely on code which was lacking in tests and where the author had 
-left the company a while ago. In addition the existing codebase was inflexible and required preprocessing and lots of glue at the shell level, 
-meaning the main logic couldn't be tested either due to missing tools in CI/CD servers. 
+Having worked with Meteorologic data using the ECMWF tooling for a while I became familar with the structure of Grib files and many of the 
+command line tools provided by ECMWF. However extracting the data was a pain due to having to rely on legacy c code written by someone who
+had left the company a while ago and was poorly structureed and lacking in tests. In addition the existing codebase was inflexible and 
+required preprocessing and lots of glue at the shell level, meaning the main logic couldn't be tested particulary well due to missing tools in the 
+CI/CD servers and a black box executable program.
 
-GribToArrow was created to overcome these problems. Although it is currently is built with a CMake file it is anticipated that this can be 
-changed to use a more modern build backend with a pyproject.toml file to create a wheel which includes the dependencies and allows thorough testing.
+GribToArrow was created to overcome these problems. Although it is currently built with a CMake file, it is anticipated that this can be 
+changed to use a more modern backend with a pyproject.toml file to create a wheel which includes the dependencies and allows thorough testing, both 
+of the module itself and any code using the library.
 
-GribToArrow aims to abstract away the low level detail and create a python binding which exposed the data in arrow format. The Apache Arrow 
-format is rapidly becoming a key component of the data eco-system. Exposing the Grib data in a modern column based tabular format allows for rapid high level development. Enabling operations such as filtering, calculation, renaming, projecting, transposing and saving to files / databases 
-a breeze via the use of high level libraries such as polars / pandas.
+GribToArrow aims to abstract away the low level detail and create a python binding which exposes the data in arrow format. The Apache Arrow 
+format is rapidly becoming a key component of modern data eco-system. Exposing the Grib data in a modern column based tabular format allows for 
+rapid high level development. Operations such as filtering, calculation, renaming, projecting, transposing and saving to files / databases 
+becomes a breeze via the ease of integrating with high level libraries such as polars / pandas / duckdb. Additionally due to the way Apache Arrow is
+created the integration is typically known as zero copy meaning data can be passed between any tool which can read Apache Arrow at zero cost.
+
+What does this mean in reality ? It means you can mix and match tools. If you start using this library with polars but find some functionality
+is missing such as geospatial functions you can keep the existing logic in polars and pass the dataframe to a tool such as duckdb to perform
+the geospatial elements of your processing and then pass this back to polars if required (At the time of writing geoparquet is a work in 
+progress and once this is completed work on geopolars will commence. However duckdb has integrated many of the geospatial function from postGIS).
 
 
 The python module is comprised of the following:
@@ -30,8 +41,8 @@ gribmessage (Class)
 
 A sample usage of the Library in python is given below. In this code a config CSV is read with polars.
 The CSV contains a list of latitude / longitudes where we want to know the equivalent values in the Grib file.
-e.g. this might be a list of all the major world cities.
-The polars table is converted to arrow and passed to the GribToArrowMethod which returns our reader / iterator object.
+e.g. This might be a list of all the major world cities.
+The polars table is converted to arrow and passed to the GribToArrow method which returns our reader / iterator object.
 Next a simple list comprehension is used to extract all the details from every message and the results are saved to a parquet file.
 As can been seen a lot of work was accomplished in just 14 lines of python. In addition to the low amount of code required
 we also quick performance. 
@@ -55,22 +66,28 @@ we also quick performance.
 
 ## Performance
 The module is fast since it operates entirely in memory. In addition it releases the GIL to allow python threading. Currently it doesn't 
-use threading in the C++ layer, this is because the author created the project using OSX and the default compiler on OSX doesn't include OMP, this can be done if required although for the reasons detailed below may not be needed. 
-Since the main usage is from python it is anticipated the just releasing the GIL will be sufficient.
-In addition since everything is extracted in memory and made available to arrow and hence the vast ecosystem of tools such as polars and 
-pandas multiprocessing and partitioning of files can be utilised to also achieve parallism.
+use threading in the C++ layer, this is because the author created the project using OSX and the default compiler on OSX doesn't include OMP, 
+this can be done if required although for the reasons detailed below may not be needed. 
+Since the main usage is from python it is anticipated that just releasing the GIL will be sufficient.
+In addition since everything is extracted in memory and made available to arrow and hence the vast ecosystem of tools such as polars,
+pandas and duckdb then multiprocessing and partitioning of files parquet can be utilised to also achieve a high degree of parallism.
 A test on a 2023 MacBook Pro extracted 230 million rows from a concatenated grib and wrote this to a parquet file in 6 seconds.
 
 ## Core functionality
 
 The main entry point is the GribReader class, which takes a string path to a grib file in the constructor.
 
-In addition GribReader has a fluent API which includes the following methods
+In addition GribReader has a fluent API which includes the following methods :-
 
-- withStations -> Pass an arrow table to this function which includes the columns "lat" and "lon" and the results will be filtered to the nearest location based on the provided co-ordinates.
+- withStations -> Pass an arrow table to this function which includes the columns "lat" and "lon" and the results will be filtered to the 
+nearest location based on the provided co-ordinates. e.g. you might have a grib file at 0.5 resolution for every location of earth. Logically a lot
+of those locations will be at sea, so you could use this facility and specify a list of latitutdes and longitudes to restricte the amount of results
+returned.
 
 - withConversions -> Pass an arrow table with columns "parameterId", "addition_value", "subtraction_value", "multiplication_value", "division_value".
-The values will be used to perform computations on the data. e.g. The underlying grib might contain a parameter where the data is in Kelvin but you want the values in Celcius, passing a config table with these values will enable the conversions to be performed early in the data pipeline using the Apache Arrow Compute Kernel / module. See the tests folder for examples.
+The values will be used to perform computations on the data. e.g. The underlying grib might contain a parameter where the data is in Kelvin but 
+you want the values to be in Celcius. Passing a config table with these values will enable the conversions to be performed early in the data 
+pipeline using the Apache Arrow Compute Kernel / module. See the tests folder for examples.
 
 Grib reader is iterable so can be used in any for loop / generator / list comprehension etc..
 Each iteratation of the reader will return a GribMessage. 
@@ -89,18 +106,20 @@ build backend and a pyproject.toml file to create a python wheel which can be in
 - Install ECCODES -> build from source
 - Install arrow -> use homebrew on osx
 - pip install pyarrow (or use venv but remember to activate it when testing)
-- pip install polars (if you want to run the samples / tests). At the lowest level you can intereact with the result using pyArrow or any tools which can interact with the Apache Arrow ecosystem e.g. Pandas / Polars etc..
+- pip install polars (if you want to run the samples / tests). At the lowest level you can intereact with the results using pyArrow or any 
+tools which can interact with the Apache Arrow ecosystem e.g. Pandas, Polars, Duckdb, Vaex etc..
 
 ### Clone This project
 
 Clone this project using git
 
-Then cd into the folder and clone pybind11 at the root level of the folder
+Then cd into the folder and clone pybind11 at the root level of the folder.
 
 ### Clone pybind11
 
 The module is created using pybind11. Rather than adding this as source to this repository you should instead clone the latest version into this 
-repo. This can be done with a command similar to the one below, note it might not be exactly this command git might suggest to use a sub-project, follow the git recommendation.
+repo. This can be done with a command similar to the one below, note it might not be exactly this command git might suggest to use a sub-project 
+or similar, follow the git recommendation.
 
 In the project folder, clone pybind11
 
@@ -113,7 +132,7 @@ Use an IDE / Plugin such as visual studio code
 
 Or...
 
-Open a terminal being in the project folder, run
+Open a terminal and cd into the project folder then run
 
 mkdir build
 cd build
@@ -121,11 +140,13 @@ cmake ..
 make 
 In the build directory, you should have a compiled module with the name similar to:
 
-gribtoarrow.cpython-39-x86_64-linux-gnu.so
+gribtoarrow.cpython-312-x86_64-linux-gnu.so
 
 or on OSX
 
 gribtoarrow.cpython-312-darwin.so
+
+Where 312 is your python version (In the case above the author is running python 3.12)
 
 ### Run
 
@@ -139,18 +160,18 @@ e.g.
 
 export PYTHON_PATH=/Users/hugo/Development/cpp/grib_to_arrow/build
 
-Or just cd into the build directory remembering to activate your venv which ontains pyarrow if you are using venv.
+Or just cd into the build directory. Remember to activate your venv which contains pyarrow if you are using venv.
 
 Now type
 
 python
 
-To access the python REPL and then import the library using the command below.
+Which will load the python REPL and then import the library using the command below.
 
 import gribtoarrow 
 
 You are now ready to work with library. There are many examples of how to use it from python in the tests folder
-and the .py files in the pythonApi. A list of the exposed methods can be seen in grib_to_arrow.cpp in the pythonApi
+and the .py files in the pythonApi folder. A list of the exposed methods can be seen in grib_to_arrow.cpp in the pythonApi
 folder.
 
 
