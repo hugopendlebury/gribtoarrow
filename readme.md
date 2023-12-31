@@ -8,8 +8,8 @@ you want a simple pythonic way to interact with GRIB data then give this module 
 
 Having worked with Meteorologic data using the ECMWF tooling for a while I became familar with the structure of Grib files and many of the 
 command line tools provided by ECMWF. However extracting the data was a pain due to having to rely on legacy c code written by someone who
-had left the company a while ago and was poorly structureed and lacking in tests. In addition the existing codebase was inflexible and 
-required preprocessing and lots of glue at the shell level, meaning the main logic couldn't be tested particulary well due to missing tools in the 
+had left the company a while ago and was poorly structured and lacking in tests. In addition the existing codebase was inflexible and 
+required preprocessing and lots of glue at the shell level, meaning the main logic couldn't be tested particulary well due to missing tools on the 
 CI/CD servers and a black box executable program.
 
 GribToArrow was created to overcome these problems. Although it is currently built with a CMake file, it is anticipated that this can be 
@@ -17,15 +17,16 @@ changed to use a more modern backend with a pyproject.toml file to create a whee
 of the module itself and any code using the library.
 
 GribToArrow aims to abstract away the low level detail and create a python binding which exposes the data in arrow format. The Apache Arrow 
-format is rapidly becoming a key component of modern data eco-system. Exposing the Grib data in a modern column based tabular format allows for 
-rapid high level development. Operations such as filtering, calculation, renaming, projecting, transposing and saving to files / databases 
-becomes a breeze via the ease of integrating with high level libraries such as polars / pandas / duckdb. Additionally due to the way Apache Arrow is
-created the integration is typically known as zero copy meaning data can be passed between any tool which can read Apache Arrow at zero cost.
+format is rapidly becoming a key component of most modern data eco-systems. Exposing the Grib data in a modern column based format allows for 
+rapid high level development. Operations such as filtering, calculations, joining, aggregating, renaming, projecting, transposing and 
+saving to files / databases becomes a breeze via the ease of integrating with high level libraries such as polars, pandas and duckdb. 
+Additionally due to the way Apache Arrow is created the integration is typically known as zero copy meaning data can be passed between 
+any tool which can read Apache Arrow at zero cost.
 
 What does this mean in reality ? It means you can mix and match tools. If you start using this library with polars but find some functionality
 is missing such as geospatial functions you can keep the existing logic in polars and pass the dataframe to a tool such as duckdb to perform
 the geospatial elements of your processing and then pass this back to polars if required (At the time of writing geoparquet is a work in 
-progress and once this is completed work on geopolars will commence. However duckdb has integrated many of the geospatial function from postGIS).
+progress and once this is completed work on geopolars will commence. However duckdb has integrated many of the geospatial functions from postGIS).
 
 
 The python module is comprised of the following:
@@ -40,12 +41,12 @@ gribmessage (Class)
 
 
 A sample usage of the Library in python is given below. In this code a config CSV is read with polars.
-The CSV contains a list of latitude / longitudes where we want to know the equivalent values in the Grib file.
+The CSV contains a list of latitude / longitudes where we want to know the nearest equivalent values for those locations in the Grib file.
 e.g. This might be a list of all the major world cities.
 The polars table is converted to arrow and passed to the GribToArrow method which returns our reader / iterator object.
 Next a simple list comprehension is used to extract all the details from every message and the results are saved to a parquet file.
 As can been seen a lot of work was accomplished in just 14 lines of python. In addition to the low amount of code required
-we also quick performance. 
+we also benefit from quick performance. 
 
     import polars as pl
     from gribtoarrow import GribToArrow
@@ -80,7 +81,7 @@ The main entry point is the GribReader class, which takes a string path to a gri
 In addition GribReader has a fluent API which includes the following methods :-
 
 - withStations -> Pass an arrow table to this function which includes the columns "lat" and "lon" and the results will be filtered to the 
-nearest location based on the provided co-ordinates. e.g. you might have a grib file at 0.5 resolution for every location of earth. Logically a lot
+nearest location based on the provided co-ordinates. e.g. You might have a grib file at 0.5 resolution for every location of earth. Logically a lot
 of those locations will be at sea, so you could use this facility and specify a list of latitutdes and longitudes to restricte the amount of results
 returned.
 
@@ -94,7 +95,7 @@ Each iteratation of the reader will return a GribMessage.
 
 GribMessage also provides methods to get attribute based fields and the data.
 
-## Creating Python module
+## Creating the Python module
 
 At the time of writing the project uses CMAKE. The paths are currently hardcoded into the CMAKE file so you will need to amend the paths
 to match the location of the libraries on your system.
@@ -104,10 +105,10 @@ build backend and a pyproject.toml file to create a python wheel which can be in
 ### Install Dependencies
 
 - Install ECCODES -> build from source
-- Install arrow -> use homebrew on osx
+- Install arrow -> use homebrew on osx (we need both arrow and pyarrow)
 - pip install pyarrow (or use venv but remember to activate it when testing)
-- pip install polars (if you want to run the samples / tests). At the lowest level you can intereact with the results using pyArrow or any 
-tools which can interact with the Apache Arrow ecosystem e.g. Pandas, Polars, Duckdb, Vaex etc..
+- pip install polars (if you want to run the samples / tests). At the lowest level you can interact with the results using pyArrow or any 
+tools which can work with the Apache Arrow ecosystem e.g. Pandas, Polars, Duckdb, Vaex etc..
 
 ### Clone This project
 
