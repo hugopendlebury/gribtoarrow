@@ -1,6 +1,6 @@
 ## Goal
 
-GribToArrow is a C / C++ project which using C++20 and creates a python module to simplify working with files in the Grib Format.
+GribToArrow is a C / C++ project which uses C++20 and creates a python module to simplify working with files in the Grib Format.
 
 Under the hood it uses the ECMWF eccodes library. This is wrapped in C++ and exposed to python via the library pybind11 and apache arrow.
 
