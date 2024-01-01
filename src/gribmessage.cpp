@@ -31,14 +31,14 @@ using namespace std;
     string GribMessage::getCodesHandleAddress() {
         std::ostringstream address;
         address << (void const *)h;
-        std:string name = address.str();
+        string name = address.str();
         return name;
     }
 
     string GribMessage::getObjectAddress() {
         std::ostringstream address;
         address << (void const *)this;
-        std:string name = address.str();
+        string name = address.str();
         return name;
     }
 
@@ -239,7 +239,7 @@ using namespace std;
             double* inlons = &lons_vector[0];
 
             long numberOfPoints = lats_vector.size();
-            double *outlats, *outlons, *outvalues, *doubleValues, *distances;
+            double *outlats, *outlons, *outvalues, *distances;
             int *indexes; /* arrays */
 
             outlats = (double*)malloc(numberOfPoints * sizeof(double));

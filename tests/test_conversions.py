@@ -2,7 +2,6 @@ import polars as pl
 import pytest
 import os
 import sys
-from pytest import approx
 
 
 @pytest.fixture()
@@ -66,7 +65,7 @@ class TestConversions:
             )
         ).to_arrow()
 
-        raw_results_reader = (
+        (
             GribReader(f"{resource}{os.sep}gep01.t00z.pgrb2a.0p50.f003")
             .withStations(stations)
             .withConversions(conversions)

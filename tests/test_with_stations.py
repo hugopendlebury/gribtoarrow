@@ -2,7 +2,6 @@ import polars as pl
 import pytest
 import os
 import sys
-from pytest import approx
 
 
 @pytest.fixture()
