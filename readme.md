@@ -9,12 +9,10 @@ you want a simple pythonic way to interact with GRIB data then give this module 
 Having worked with Meteorologic data using the ECMWF tooling for a while I became familar with the structure of Grib files and many of the 
 command line tools provided by ECMWF. However extracting the data was a pain due to having to rely on legacy c code written by someone who
 had left the company a while ago and was poorly structured and lacking in tests. In addition the existing codebase was inflexible and 
-required preprocessing and lots of glue at the shell level, meaning the main logic couldn't be tested particulary well due to missing tools on the 
-CI/CD servers and a black box executable program.
+required preprocessing and lots of glue at the shell level, meaning the main logic couldn't be tested particulary well due to
+missing tools on the CI/CD servers and a black box executable program.
 
-GribToArrow was created to overcome these problems. Although it is currently built with a CMake file, it is anticipated that this can be 
-changed to use a more modern backend with a pyproject.toml file to create a wheel which includes the dependencies and allows thorough testing, both 
-of the module itself and any code using the library.
+GribToArrow was created to overcome these problems. It can be installed using CMAKE or in a more pythonic way using poetry.
 
 GribToArrow aims to abstract away the low level detail and create a python binding which exposes the data in arrow format. The Apache Arrow 
 format is rapidly becoming a key component of most modern data eco-systems. Exposing the Grib data in a modern column based format allows for 
@@ -97,18 +95,31 @@ GribMessage also provides methods to get attribute based fields and the data.
 
 ## Creating the Python module
 
-At the time of writing the project uses CMAKE. The paths are currently hardcoded into the CMAKE file so you will need to amend the paths
-to match the location of the libraries on your system.
-It is anticipated that this will be modified in future to created a smarter CMAKE file or simply remove this and replace it with a more modern
-build backend and a pyproject.toml file to create a python wheel which can be installed / distributed on PyPi etc...
+At the time of writing the project can be built two ways.
 
-### Install Dependencies
+-  CMAKE. The paths are currently hardcoded into the CMAKE file so you will need to amend the paths to match the location of the libraries on 
+your system. It should noted that after you have installed arrow and pyarrow you can find the include and library paths using these commands.
+pyarrow.get_library_dirs() and pyarrow.get_include()
+
+- Poetry. A pyproject.toml file is present in the repo which simplies the build.
+    Simply execute the commands below
+
+
+    poetry build
+    poetry install
+
+### Install Dependencies - This will depend on if you are building the project with CMAKE or poetry.
 
 - Install ECCODES -> build from source
 - Install arrow -> use homebrew on osx (we need both arrow and pyarrow)
+
+If using cmake you will also need to install the follow
+
 - pip install pyarrow (or use venv but remember to activate it when testing)
 - pip install polars (if you want to run the samples / tests). At the lowest level you can interact with the results using pyArrow or any 
 tools which can work with the Apache Arrow ecosystem e.g. Pandas, Polars, Duckdb, Vaex etc..
+
+If you are using poetry this will be taken care of for you.
 
 ### Clone This project
 
