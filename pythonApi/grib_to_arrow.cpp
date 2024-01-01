@@ -1,9 +1,18 @@
 #include "../src/gribreader.hpp"
 #include "../src/gribmessage.hpp"
-#include "../pybind11/include/pybind11/pybind11.h"
-// to convert C++ STL containers to python list
-#include "../pybind11/include/pybind11/stl.h" 
-#include "../pybind11/include/pybind11/chrono.h" 
+
+#ifdef USE_CMAKE
+    #include "../pybind11/include/pybind11/pybind11.h"
+    #include "../pybind11/include/pybind11/stl.h" 
+    #include "../pybind11/include/pybind11/chrono.h" 
+
+#else
+    #include <pybind11/pybind11.h>
+    #include <pybind11/stl.h>
+    #include "pybind11/chrono.h" 
+#endif
+
+
 #include <arrow/api.h>
 #include <arrow/python/pyarrow.h>
 #include "../src/caster.hpp"
