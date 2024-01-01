@@ -8,6 +8,9 @@ import pyarrow
 
 def build(setup_kwargs: Dict[str, Any]) -> None:
 
+    arrow_libs = [f"-L{lib}" for lib in pyarrow.get_library_dirs()]
+    arrow_link = [f"-Wl,-rpath,{lib}" for lib in pyarrow.get_library_dirs()]
+
     ext_modules = [
         Pybind11Extension(
             "gribtoarrow", 
@@ -21,7 +24,7 @@ def build(setup_kwargs: Dict[str, Any]) -> None:
             include_dirs=[".", "/usr/local/include", pyarrow.get_include()],
             extra_compile_args=['-O3'],
             #Arrow::arrow_shared arrow_python
-            extra_link_args=pyarrow.get_library_dirs() + ['/usr/local/lib', '-leccodes', '-larrow_python'] ,
+            extra_link_args= arrow_libs + arrow_link + ['-L/usr/local/lib', '-leccodes', '-larrow_python'] ,
             language='c++',
             cxx_std=20
         ),
