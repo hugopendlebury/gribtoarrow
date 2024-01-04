@@ -30,6 +30,35 @@ tests-mypy = ["mypy (>=1.6)", "pytest-mypy-plugins"]
 tests-no-zope = ["attrs[tests-mypy]", "cloudpickle", "hypothesis", "pympler", "pytest (>=4.3.0)", "pytest-xdist[psutil]"]
 
 [[package]]
+name = "cmake"
+version = "3.28.1"
+description = "CMake is an open-source, cross-platform family of tools designed to build, test and package software"
+optional = false
+python-versions = "*"
+files = [
+    {file = "cmake-3.28.1-py2.py3-none-macosx_10_10_universal2.macosx_10_10_x86_64.macosx_11_0_arm64.macosx_11_0_universal2.whl", hash = "sha256:9c77c47afef821c0044ba73d182c386ab02e92e6bda5296e553c12455a083f29"},
+    {file = "cmake-3.28.1-py2.py3-none-manylinux2010_i686.manylinux_2_12_i686.whl", hash = "sha256:6a9549755d1178426502753d48949edae9bb0c66f15a07f09904783125beb0e3"},
+    {file = "cmake-3.28.1-py2.py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl", hash = "sha256:d0978cdd08c0ebc76f4f8543aba1381a41580dcb9c3bcffb536c41337b75aea1"},
+    {file = "cmake-3.28.1-py2.py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:96d506c417d63bbcff19b3e9eaa69fe546456a0ddeffe914bcbb23cceee6818e"},
+    {file = "cmake-3.28.1-py2.py3-none-manylinux2014_i686.manylinux_2_17_i686.whl", hash = "sha256:74c9878c504ccc6ddd5b0914cbe3b86417a36a2c2dfc486040bfdfe63fbbb1ac"},
+    {file = "cmake-3.28.1-py2.py3-none-manylinux2014_ppc64le.manylinux_2_17_ppc64le.whl", hash = "sha256:64d4642c48486bb4320540781a2266c2060929d1e236d6eb2b2c96273e75e958"},
+    {file = "cmake-3.28.1-py2.py3-none-manylinux2014_s390x.manylinux_2_17_s390x.whl", hash = "sha256:363bd0124d71d7e3d9b1ac9bd1dce1d80ba90f48b264c3bf9dbfcfda875cafc9"},
+    {file = "cmake-3.28.1-py2.py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:1be8f351271f8bcbe32288066e5add642d7c32f2f8fec3f135949c2cb13dfac2"},
+    {file = "cmake-3.28.1-py2.py3-none-musllinux_1_1_aarch64.whl", hash = "sha256:3ed193134a4937bad8de2b4f62faebc8c1a4049cd37dad9767db7e7d91a08b52"},
+    {file = "cmake-3.28.1-py2.py3-none-musllinux_1_1_i686.whl", hash = "sha256:6ffb1fdb0b0f7f11271d82b5892c2edc109d561e186f882def095970403e2110"},
+    {file = "cmake-3.28.1-py2.py3-none-musllinux_1_1_ppc64le.whl", hash = "sha256:9ea12ebe4b8266f04d6619ed64860bd6e687522f02caf3131515dd39d614ef00"},
+    {file = "cmake-3.28.1-py2.py3-none-musllinux_1_1_s390x.whl", hash = "sha256:2ad22d897d2ed38544e5ef26ee21c4dccc38e938660cd07497fd6bdba0993ea6"},
+    {file = "cmake-3.28.1-py2.py3-none-musllinux_1_1_x86_64.whl", hash = "sha256:379a730b274f39e5858ef2107861b2727918493347b0ccdd5f62bcbb6a8450d9"},
+    {file = "cmake-3.28.1-py2.py3-none-win32.whl", hash = "sha256:c82bc0eb1495cf518cb4f355b8a73e584e67d53453406c0498bacc454cf6c404"},
+    {file = "cmake-3.28.1-py2.py3-none-win_amd64.whl", hash = "sha256:bb03ed4753185d0c70c0bc3212e5533e20eb2c17fa0ca1e7603b702c6d0db8cf"},
+    {file = "cmake-3.28.1-py2.py3-none-win_arm64.whl", hash = "sha256:40f0671c05ef7eec27c4f53c63630b0b621e40f80ab38607d3a0e3a1f2c9242a"},
+    {file = "cmake-3.28.1.tar.gz", hash = "sha256:0d4051d101d151d8387156c463aa45c8cd0e164f870e0ac0c8c91d3ff08528e1"},
+]
+
+[package.extras]
+test = ["coverage (>=4.2)", "importlib-metadata (>=2.0)", "pytest (>=3.0.3)", "pytest-cov (>=2.4.0)"]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 description = "Cross-platform colored terminal text."
@@ -39,6 +68,37 @@ files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
 ]
+
+[[package]]
+name = "gitdb"
+version = "4.0.11"
+description = "Git Object Database"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "gitdb-4.0.11-py3-none-any.whl", hash = "sha256:81a3407ddd2ee8df444cbacea00e2d038e40150acfa3001696fe0dcf1d3adfa4"},
+    {file = "gitdb-4.0.11.tar.gz", hash = "sha256:bf5421126136d6d0af55bc1e7c1af1c397a34f5b7bd79e776cd3e89785c2b04b"},
+]
+
+[package.dependencies]
+smmap = ">=3.0.1,<6"
+
+[[package]]
+name = "gitpython"
+version = "3.1.40"
+description = "GitPython is a Python library used to interact with Git repositories"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "GitPython-3.1.40-py3-none-any.whl", hash = "sha256:cf14627d5a8049ffbf49915732e5eddbe8134c3bdb9d476e6182b676fc573f8a"},
+    {file = "GitPython-3.1.40.tar.gz", hash = "sha256:22b126e9ffb671fdd0c129796343a02bf67bf2994b35449ffc9321aa755e18a4"},
+]
+
+[package.dependencies]
+gitdb = ">=4.0.1,<5"
+
+[package.extras]
+test = ["black", "coverage[toml]", "ddt (>=1.1.1,!=1.4.3)", "mock", "mypy", "pre-commit", "pytest", "pytest-cov", "pytest-instafail", "pytest-subtests", "pytest-sugar"]
 
 [[package]]
 name = "iniconfig"
@@ -282,6 +342,17 @@ files = [
 ]
 
 [[package]]
+name = "smmap"
+version = "5.0.1"
+description = "A pure Python implementation of a sliding window memory map manager"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "smmap-5.0.1-py3-none-any.whl", hash = "sha256:e6d8668fa5f93e706934a62d7b4db19c8d9eb8cf2adbb75ef1b675aa332b69da"},
+    {file = "smmap-5.0.1.tar.gz", hash = "sha256:dceeb6c0028fdb6734471eb07c0cd2aae706ccaecab45965ee83f11c8d3b1f62"},
+]
+
+[[package]]
 name = "toml"
 version = "0.10.2"
 description = "Python Library for Tom's Obvious, Minimal Language"
@@ -295,4 +366,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "abcd7990ff24971e8634691de498a509d4c7bd0a885ad383745e4fe86e139144"
+content-hash = "8b4314fdf4fa92cd243175adc1b11e6fc3d82c0c3ef72d746cdb945fcd7ff4c4"
