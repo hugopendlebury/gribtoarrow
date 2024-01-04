@@ -2,7 +2,6 @@
 
 from typing import Any, Dict
 from pybind11.setup_helpers import Pybind11Extension, build_ext
-import cmake
 import pyarrow
 import site
 import os
@@ -13,7 +12,7 @@ import subprocess
 from pprint import pprint
 
 def getCMakePath() -> str:
-    #The poetry fill specified the cmake wheel which will install the latest version
+    #The poetry file specifies the cmake packagee which will install the latest version
     #of cmake into our site-packages folder 
     #find this location so we can just shell out and build eccodes
     for location in site.getsitepackages():
@@ -27,6 +26,13 @@ def get_working_dir() -> Path:
 
 def get_temp_eccodes_path() -> Path:
     return get_working_dir() / "temp_eccodes"
+
+def get_eccodes_include_path() -> Path:
+    return get_temp_eccodes_path() / "include"
+
+def get_eccodes_lib_path() -> str:
+    p = get_temp_eccodes_path() / "lib"
+    return str(p)
 
 def get_build_dir() -> Path:
     return get_temp_eccodes_path() / "build"
@@ -108,9 +114,12 @@ def build(setup_kwargs: Dict[str, Any]) -> None:
             ,"src/griblocationdata.cpp"
             ,"src/arrowutils.cpp"
             ,"src/converter.cpp"],
-            include_dirs=[".", "", pyarrow.get_include()],
+            include_dirs=[".",  get_eccodes_include_path(), pyarrow.get_include()],
             extra_compile_args=['-O3'],
-            extra_link_args= arrow_libs + arrow_link + ['-L/usr/local/lib', '-Wl,-rpath,/usr/local/lib','-leccodes', '-larrow_python'] ,
+            extra_link_args= arrow_libs + arrow_link + [f"-L{get_eccodes_lib_path()}", 
+                                                        "-Bstatic -llibeccodes_memfs",
+                                                        #'-l:libeccodes_memfs.a', 
+                                                        '-larrow_python'] ,
             language='c++',
             cxx_std=20
         ),

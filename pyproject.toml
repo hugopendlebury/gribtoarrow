@@ -14,17 +14,17 @@ python = "^3.12"
 pyarrow = "^14.0.2"
 pybind11 = "^2.11.1"
 cmake = "^3.28.1"
-gitpython = "^3.1.40"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.9"
+requests = "^2.31.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^6.0.0"
 polars = "^0.20.2"
 
 [build-system]
-requires = ["poetry-core", "wheel", "setuptools-cpp", "pyarrow"]
+requires = ["poetry-core", "wheel", "setuptools-cpp", "pyarrow", "requests"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
