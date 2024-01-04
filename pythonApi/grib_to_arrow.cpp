@@ -1,6 +1,8 @@
 #include "../src/gribreader.hpp"
 #include "../src/gribmessage.hpp"
 
+#define USE_CMAKE
+
 #ifdef USE_CMAKE
     #include "../pybind11/include/pybind11/pybind11.h"
     #include "../pybind11/include/pybind11/stl.h" 
@@ -56,6 +58,8 @@ PYBIND11_MODULE(gribtoarrow, m)
         .def("getLongitudeOfLastPoint", &GribMessage::getLongitudeOfLastPoint, pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("getData", &GribMessage::getData, pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("getDataWithStations", &GribMessage::getDataWithStations, pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("iScansNegatively", &GribMessage::iScansNegatively, pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("jScansPositively", &GribMessage::jScansPositively, pybind11::call_guard<pybind11::gil_scoped_release>())
         ;
 
 }

@@ -12,19 +12,25 @@ class GridArea
 
     public:
 
-        long m_latitudeOfFirstPoint;
-        long m_longitudeOfFirstPoint;
-        long m_latitudeOfLastPoint;
-        long m_longitudeOfLastPoint;
+        const double m_latitudeOfFirstPoint;
+        const double m_longitudeOfFirstPoint;
+        const double m_latitudeOfLastPoint;
+        const double m_longitudeOfLastPoint;
+        const bool m_iScansNegatively;
+        const bool m_jScansPositively;
 
 
-        GridArea(long latitudeOfFirstPoint, 
-                long longitudeOfFirstPoint,
-                long latitudeOfLastPoint, 
-                long longitudeOfLastPoint) : m_latitudeOfFirstPoint(latitudeOfFirstPoint),
+        GridArea(const double latitudeOfFirstPoint, 
+                const double longitudeOfFirstPoint,
+                const double latitudeOfLastPoint, 
+                const double longitudeOfLastPoint,
+                const bool iScansNegatively,
+                const bool jScansPositively) : m_latitudeOfFirstPoint(latitudeOfFirstPoint),
                                              m_longitudeOfFirstPoint(longitudeOfFirstPoint),
                                              m_latitudeOfLastPoint(latitudeOfLastPoint),
-                                             m_longitudeOfLastPoint(longitudeOfLastPoint) {}
+                                             m_longitudeOfLastPoint(longitudeOfLastPoint),
+                                             m_iScansNegatively(iScansNegatively),
+                                             m_jScansPositively(jScansPositively) {}
 
         // Match all fields incase of collision
         bool operator==(const GridArea& other) const
@@ -32,20 +38,23 @@ class GridArea
             return m_latitudeOfFirstPoint == other.m_latitudeOfFirstPoint 
                     && m_longitudeOfFirstPoint == other.m_longitudeOfFirstPoint
                     && m_latitudeOfLastPoint == other.m_latitudeOfLastPoint 
-                    && m_longitudeOfLastPoint == other.m_longitudeOfLastPoint;;
+                    && m_longitudeOfLastPoint == other.m_longitudeOfLastPoint
+                    && m_iScansNegatively == other.m_iScansNegatively
+                    && m_jScansPositively == other.m_jScansPositively;
         }
 
       
 };
 
-// Custom specialization of std::hash can be injected in namespace std.
+
 template<>
 struct hash<GridArea>
 {
     size_t operator()(const GridArea& ga) const noexcept
     {
-        unsigned long long h = (ga.m_latitudeOfFirstPoint << 24) | (ga.m_longitudeOfFirstPoint << 16) 
-        | (ga.m_latitudeOfLastPoint << 8) | ga.m_longitudeOfLastPoint; 
+        //TODO - Sort this out and maybe add scan direction
+        unsigned long long h = ga.m_latitudeOfFirstPoint * ga.m_longitudeOfFirstPoint * ga.m_latitudeOfLastPoint 
+                * ga.m_longitudeOfLastPoint; 
         return h;
     }
 }; 

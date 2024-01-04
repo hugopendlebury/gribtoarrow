@@ -40,4 +40,6 @@ class TestFilterMessageId:
         assert 0.0 == message.getLongitudeOfFirstPoint()
         assert -90.0 == message.getLatitudeOfLastPoint()
         assert 359.5 == message.getLongitudeOfLastPoint()
+        assert False == message.iScansNegatively()
+        assert False == message.jScansPositively()
 

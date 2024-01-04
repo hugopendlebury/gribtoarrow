@@ -21,7 +21,7 @@ def build(setup_kwargs: Dict[str, Any]) -> None:
             ,"src/griblocationdata.cpp"
             ,"src/arrowutils.cpp"
             ,"src/converter.cpp"],
-            include_dirs=[".", "/usr/local/include", pyarrow.get_include()],
+            include_dirs=[".", "", pyarrow.get_include()],
             extra_compile_args=['-O3'],
             #Arrow::arrow_shared arrow_python
             extra_link_args= arrow_libs + arrow_link + ['-L/usr/local/lib', '-Wl,-rpath,/usr/local/lib','-leccodes', '-larrow_python'] ,

@@ -37,7 +37,7 @@ public:
 
     //TODO Refactor this to use optional
     bool hasStations();
-    arrow::Table* getStations(std::unique_ptr<GridArea>& area);
+    std::shared_ptr<arrow::Table> getStations(std::unique_ptr<GridArea>& area);
 
     std::optional<std::function<arrow::Result<std::shared_ptr<arrow::Array>>(std::shared_ptr<arrow::Array>)>> getConversions(long parameterId);
 
@@ -47,16 +47,12 @@ public:
     private:
         string filepath;
         int err             = 0;
-        arrow::Table*       stations = NULLPTR;
+        std::shared_ptr<arrow::Table> shared_stations;
         arrow::Table*       conversions = NULLPTR;
-        std::unordered_map<GridArea, arrow::Table*> stations_in_area;
+        std::unordered_map<GridArea, std::shared_ptr<arrow::Table>> stations_in_area;
         std::unordered_map<GridArea, GribLocationData*> location_cache;
-        //std::unordered_map<int64_t, std::function<arrow::Result<std::shared_ptr<arrow::Array>>(std::shared_ptr<arrow::Array>)>> conversion_funcs;
         std::unordered_map<int64_t, Converter*> conversion_funcs;
         GribMessage*        m_endMessage;
- 
-
-
 
 };
 #endif /*GRIB_READER_H_INCLUDED*/

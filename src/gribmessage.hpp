@@ -50,6 +50,8 @@ class GribMessage
         long getStepRange();
         long getHourOffset();
         long getNumberOfPoints();
+        bool iScansNegatively();
+        bool jScansPositively();
         std::shared_ptr<arrow::RecordBatch> getData();
         std::shared_ptr<arrow::RecordBatch> getDataWithStations();
         ~ GribMessage();

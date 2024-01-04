@@ -172,6 +172,13 @@ e.g.
 
 export PYTHON_PATH=/Users/hugo/Development/cpp/grib_to_arrow/build
 
+or 
+
+export DYLD_LIBRARY_PATH=/usr/local/lib
+python
+import pyarrow
+import gribtoarrow
+
 Or just cd into the build directory. Remember to activate your venv which contains pyarrow if you are using venv.
 
 Now type

@@ -116,6 +116,14 @@ using namespace std;
         return getNumericParameter("numberOfPoints");
     }
 
+    bool GribMessage::iScansNegatively() {
+        return (int)getNumericParameter("iScansNegatively") == 1 ;
+    }
+    
+    bool GribMessage::jScansPositively() {
+        return (int)getNumericParameter("jScansPositively") == 1 ;
+    }
+
     std::shared_ptr<arrow::RecordBatch> GribMessage::getData() {
 
         double *lats, *lons, *values; /* arrays */
@@ -200,8 +208,10 @@ using namespace std;
         auto lon1 = getLongitudeOfFirstPoint();
         auto lat2 = getLatitudeOfLastPoint();
         auto lon2 = getLongitudeOfLastPoint();
-        //std::unique_ptr<LargeObject> pLarge(new LargeObject());
-        return std::unique_ptr<GridArea>  (new GridArea(lat1, lon1, lat2, lon2));
+        auto iDirection = iScansNegatively();
+        auto jDirection = jScansPositively();
+
+        return std::unique_ptr<GridArea>  (new GridArea(lat1, lon1, lat2, lon2, iDirection, jDirection));
     }
 
     std::vector<double> GribMessage::colToVector(std::shared_ptr<arrow::ChunkedArray> columnArray) {
@@ -228,7 +238,7 @@ using namespace std;
             return cache_results.value();
         } 
         else {
-            auto stations = reader->getStations(gridArea);
+            auto stations = reader->getStations(gridArea).get();
             //Ok we have an arrow table - get the pointers
             auto lats = stations->GetColumnByName("lat");
             auto lats_vector = colToVector(lats);
@@ -273,8 +283,10 @@ using namespace std;
                 free(distances);
             }
 
-            grib_nearest_find_multiple(h,0, inlats, inlons, 
+            grib_nearest_find_multiple(h,1, inlats, inlons, 
                                     numberOfPoints, outlats, outlons, outvalues, distances, indexes);
+
+            //std::cout << "status of grib_find_nearest_multiple is " << status << std::endl;
 
             auto latsArray = fieldToArrow(numberOfPoints, inlats, false);
             auto lonsArray = fieldToArrow(numberOfPoints, inlons, false);

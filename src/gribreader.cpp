@@ -2,7 +2,18 @@
 #include <algorithm>
 #include <ranges>
 #include <arrow/api.h>
+#include <arrow/dataset/dataset.h>
 #include <arrow/compute/api.h>
+
+#include "arrow/dataset/file_ipc.h"
+#include "arrow/table.h"
+
+#include <arrow/api.h>
+#include <arrow/result.h>
+#include <arrow/status.h>
+#include <arrow/compute/api_scalar.h>
+#include <arrow/dataset/file_ipc.h>
+#include <arrow/compute/expression.h>
 #include <iostream>
 #include "arrowutils.hpp"
 #include "caster.hpp"
@@ -14,6 +25,8 @@
 #include "converter.hpp"
 
 using namespace std;
+namespace cp = arrow::compute;
+namespace ad = arrow::dataset;
 
 GribReader::GribReader(string filepath) : filepath(filepath) {
 
@@ -33,8 +46,7 @@ GribReader::GribReader(string filepath) : filepath(filepath) {
 GribReader GribReader::withStations(std::shared_ptr<arrow::Table> stations) {
     //TODO - add some validation
     //the table should contain 2 columns "lat" and "lon"
-    this->stations = stations.get();
-
+    this->shared_stations = stations;
     return *this;
 }
 
@@ -71,27 +83,25 @@ GribReader GribReader::withConversions(std::shared_ptr<arrow::Table> conversions
  
             std::function<arrow::Result<arrow::Datum>(arrow::Datum, arrow::Datum)> conversionFunc;
 
-            cout << "JEFF" << endl;
-
             switch(match->first) {
                 case conversionTypes::Add:
                     conversionFunc = [](arrow::Datum lhs, arrow::Datum rhs) {
-                        return arrow::compute::Add(lhs, rhs);
+                        return cp::Add(lhs, rhs);
                     };
                     break;
                 case conversionTypes::Subtract:
                     conversionFunc = [](arrow::Datum lhs, arrow::Datum rhs) {
-                        return arrow::compute::Subtract(lhs, rhs);
+                        return cp::Subtract(lhs, rhs);
                     };
                     break;
                 case conversionTypes::Multiply:
                     conversionFunc = [](arrow::Datum lhs, arrow::Datum rhs) {
-                        return arrow::compute::Multiply(lhs, rhs);
+                        return cp::Multiply(lhs, rhs);
                     };
                     break;
                 case conversionTypes::Divide:
                     conversionFunc = [](arrow::Datum lhs, arrow::Datum rhs) {
-                        return arrow::compute::Divide(lhs, rhs);
+                        return cp::Divide(lhs, rhs);
                     };
                     break;
             }
@@ -143,7 +153,7 @@ GribLocationData* GribReader::addLocationDataToCache(std::unique_ptr<GridArea>& 
 
 }
 
-arrow::Table* GribReader::getStations(std::unique_ptr<GridArea>& area) {
+std::shared_ptr<arrow::Table> GribReader::getStations(std::unique_ptr<GridArea>& area) {
 
     auto ga = *area.get();
 
@@ -152,9 +162,51 @@ arrow::Table* GribReader::getStations(std::unique_ptr<GridArea>& area) {
     }
     else {
             std::cout << "No area found will add areas\n";
-            //TODO compute which stations are in the area
-            stations_in_area.emplace(std::make_pair(ga, stations));
-            std::cout << "Added stations\n";
+
+            auto latDirection = ga.m_jScansPositively;   
+            auto lonDirection = ga.m_iScansNegatively;         
+
+            cp::Expression c1, c2, c3, c4;
+            if(latDirection) {
+                c1 = cp::greater_equal(cp::field_ref("lat"), cp::literal(ga.m_latitudeOfFirstPoint));
+                c2 = cp::less_equal(cp::field_ref("lat"), cp::literal(ga.m_latitudeOfLastPoint));
+            } else {
+                c1 = cp::less_equal(cp::field_ref("lat"), cp::literal(ga.m_latitudeOfFirstPoint));
+                c2 = cp::greater_equal(cp::field_ref("lat"), cp::literal(ga.m_latitudeOfLastPoint));
+            }
+
+            if(lonDirection) {
+                c3 = cp::less_equal(cp::field_ref("lon"), cp::literal(ga.m_longitudeOfFirstPoint));
+                c4 = cp::greater_equal(cp::field_ref("lon"), cp::literal(ga.m_longitudeOfLastPoint));
+            } else {
+                c3 = cp::greater_equal(cp::field_ref("lon"), cp::literal(ga.m_longitudeOfFirstPoint));
+                c4 = cp::less_equal(cp::field_ref("lon"), cp::literal(ga.m_longitudeOfLastPoint));
+            }
+
+            auto filterCondition = cp::and_({c1,c2});
+
+            // Wrap the Table in a Dataset so we can use a Scanner
+            std::shared_ptr<arrow::dataset::Dataset> dataset =
+                    std::make_shared<arrow::dataset::InMemoryDataset>(shared_stations);
+
+            auto options = std::make_shared<arrow::dataset::ScanOptions>();
+            options->filter = filterCondition;
+            
+            auto builder = arrow::dataset::ScannerBuilder(dataset, options);
+            auto scanner = builder.Finish();
+
+            if (scanner.ok()) {
+            // Perform the Scan and make a Table with the result
+                auto result = scanner.ValueUnsafe()->ToTable();
+                cout << "Successfully filtered location table" << endl;
+                auto filteredResults = result.ValueOrDie();
+                cout << "Filtered table has "<< filteredResults.get()->num_rows() << " rows" << endl;
+                stations_in_area.emplace(std::make_pair(ga, filteredResults));
+                std::cout << "Added stations to cache\n";
+            } else {
+                cout << "OH NO" << endl;
+            }
+            
     }
 
     auto required_stations = stations_in_area.find(ga);
@@ -163,5 +215,5 @@ arrow::Table* GribReader::getStations(std::unique_ptr<GridArea>& area) {
 }
 
 bool GribReader::hasStations() {
-    return stations != NULLPTR;
+    return shared_stations.use_count() > 0;
 }
