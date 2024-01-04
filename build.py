@@ -10,11 +10,12 @@ import requests
 import tarfile
 import subprocess
 from pprint import pprint
+from glob import glob
 
 def getCMakePath() -> str:
-    #The poetry file specifies the cmake packagee which will install the latest version
-    #of cmake into our site-packages folder 
-    #find this location so we can just shell out and build eccodes
+    #The poetry file specifies the cmake package which will install the latest version
+    #of cmake into our site-packages folder. 
+    #we will find this location so we can just shell out and build eccodes
     for location in site.getsitepackages():
         packages = os.listdir(location)
         if 'cmake' in packages:
@@ -104,20 +105,16 @@ def build(setup_kwargs: Dict[str, Any]) -> None:
     arrow_libs = [f"-L{lib}" for lib in pyarrow.get_library_dirs()]
     arrow_link = [f"-Wl,-rpath,{lib}" for lib in pyarrow.get_library_dirs()]
 
+    glob("src/*.cpp")
+
     ext_modules = [
         Pybind11Extension(
             "gribtoarrow", 
-            ["pythonApi/grib_to_arrow.cpp" 
-            ,"src/gribreader.cpp" 
-            ,"src/gribmessage.cpp" 
-            ,"src/gribmessageiterator.cpp"
-            ,"src/griblocationdata.cpp"
-            ,"src/arrowutils.cpp"
-            ,"src/converter.cpp"],
+            glob("pythonApi/*.cpp") + glob("src/*.cpp"),
             include_dirs=[".",  get_eccodes_include_path(), pyarrow.get_include()],
             extra_compile_args=['-O3'],
             extra_link_args= arrow_libs + arrow_link + [f"-L{get_eccodes_lib_path()}", 
-                                                        "-Bstatic -llibeccodes_memfs",
+                                                        "-hidden-llibeccodes_memfs", 
                                                         #'-l:libeccodes_memfs.a', 
                                                         '-larrow_python'] ,
             language='c++',
@@ -129,6 +126,6 @@ def build(setup_kwargs: Dict[str, Any]) -> None:
         "ext_modules": ext_modules,
         "cmd_class": {"build_ext": build_ext},
         "zip_safe": False,
-        "build_eccodes": False,
+        "build_eccodes": True,
     })
 
