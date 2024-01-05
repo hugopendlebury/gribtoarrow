@@ -28,6 +28,7 @@ class GribLocationData
         arrow::Result<std::shared_ptr<arrow::Array>> distanceArray;
         arrow::Result<std::shared_ptr<arrow::Array>> outlatsArray;
         arrow::Result<std::shared_ptr<arrow::Array>> outlonsArray;
+        std::shared_ptr<arrow::RecordBatch> tableData;
 
 
         GribLocationData(long numberOfPoints,
@@ -36,7 +37,8 @@ class GribLocationData
                         arrow::Result<std::shared_ptr<arrow::Array>> lonsArray,
                         arrow::Result<std::shared_ptr<arrow::Array>> distanceArray,
                         arrow::Result<std::shared_ptr<arrow::Array>> outlatsArray,
-                        arrow::Result<std::shared_ptr<arrow::Array>> outlonsArray);
+                        arrow::Result<std::shared_ptr<arrow::Array>> outlonsArray,
+                        std::shared_ptr<arrow::RecordBatch> tableData);
         
 
     private:

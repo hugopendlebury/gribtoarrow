@@ -44,3 +44,39 @@ class TestStations:
         # The underlying Grib has 85 messages so we expect 170 rows
 
         assert len(df) == 170
+
+    def test_passthrough_columns(self, resource):
+        #Any fields added to the location metadata lookup should be passed through after find nearest is performed
+        from gribtoarrow import GribReader
+
+        stations = pl.DataFrame(
+            {"lat": [51.5054, 53.4808], 
+             "lon": [-0.027176, 2.2426],
+             "name": ["Canary Wharf", "Manchester"],
+             "awesome_factor": ["Dull", "Buzzing"],
+             "beer" : ["London Pride", "Boddingtons"],
+             "band" : ["blur", "oasis"]}
+        ).to_arrow()
+
+        reader = GribReader(
+            f"{resource}{os.sep}gep01.t00z.pgrb2a.0p50.f003"
+        ).withStations(stations)
+
+        df : pl.DataFrame = pl.concat(
+            pl.from_arrow(message.getDataWithStations()) for message in reader
+        )
+
+        # The underlying Grib has 85 messages so we expect 170 rows
+        assert len(df) == 170
+        columns =  set(df.columns)
+        print(f"YO I got the following columns {columns}")
+        assert 'lat' in columns        
+        assert 'lon' in columns
+        assert 'name' in columns
+        assert 'awesome_factor' in columns
+        assert 'beer' in columns
+        manc = df.filter(pl.col('name')=='Manchester').select(['lat','lon','name','awesome_factor','beer','band']).unique()
+        assert all('Buzzing' == field for field in manc['awesome_factor'])
+        assert all('Boddingtons' == field for field in manc['beer'])
+        assert all('oasis' == field for field in manc['band'])
+

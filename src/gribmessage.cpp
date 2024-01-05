@@ -249,7 +249,8 @@ using namespace std;
             return cache_results.value();
         } 
         else {
-            auto stations = reader->getStations(gridArea).get();
+            auto stations_shared = reader->getStations(gridArea);
+            auto stations = stations_shared.get();
             //Ok we have an arrow table - get the pointers
             auto lats = stations->GetColumnByName("lat");
             auto lats_vector = colToVector(lats);
@@ -312,7 +313,8 @@ using namespace std;
                                                     lonsArray,
                                                     distanceArray,
                                                     outlatsArray,
-                                                    outlonsArray);
+                                                    outlonsArray,
+                                                    stations_shared.get()->CombineChunksToBatch().ValueOrDie());
 
             auto result = reader->addLocationDataToCache(gridArea, cache_data);
 
@@ -331,6 +333,7 @@ using namespace std;
             auto gridArea = getGridArea();
 
             auto location_data = getLocationData(std::move(gridArea));
+
             long numberOfPoints = location_data->numberOfPoints;
             auto indexes = location_data->indexes.get();
             double *doubleValues;
@@ -350,29 +353,41 @@ using namespace std;
 
             if(conversionFunc.has_value()) {
                 auto func = conversionFunc.value();
-                std::cout << "PRE CONV" << valuesArray.ValueOrDie()->ToString();
+                //std::cout << "PRE CONV" << valuesArray.ValueOrDie()->ToString();
                 valuesArray = func(valuesArray.ValueOrDie());
-                std::cout << "POST CONV" << valuesArray.ValueOrDie()->ToString();
+                //std::cout << "POST CONV" << valuesArray.ValueOrDie()->ToString();
             }
 
-            auto schema = arrow::schema({
-                arrow::field("latitude", arrow::float64()),
-                arrow::field("longitude", arrow::float64()),
-                arrow::field("distance", arrow::float64()),
-                arrow::field("outlatitude", arrow::float64()),
-                arrow::field("outlongitude", arrow::float64()),
-                arrow::field("value", arrow::float64())
-            });
+            //Add all the fields from our lookup table first
+            arrow::FieldVector fields;
             
-            auto rbatch = arrow::RecordBatch::Make(schema, numberOfPoints, 
-                                    {
-                                        location_data->latsArray.ValueOrDie(),
-                                        location_data->lonsArray.ValueOrDie(),
-                                        location_data->distanceArray.ValueOrDie(),
-                                        location_data->outlatsArray.ValueOrDie(),
-                                        location_data->outlonsArray.ValueOrDie(),
-                                        valuesArray.ValueOrDie(),
-                                    });
+            auto locationFieldsVector = location_data->tableData.get()->schema().get()->fields();
+            for(auto f : locationFieldsVector) {
+                auto field = f.get();
+                fields.push_back(arrow::field(field->name(), field->type()));
+            }
+            
+            //Now add the data from the lookups and grib data
+            fields.push_back(arrow::field("distance", arrow::float64()));
+            fields.push_back(arrow::field("nearestlatitude", arrow::float64()));
+            fields.push_back(arrow::field("nearestlongitude", arrow::float64()));
+            fields.push_back(arrow::field("value", arrow::float64()));
+
+            auto schema_new = arrow::schema(fields);
+
+            std::vector<std::shared_ptr<arrow::Array>> resultsArrayNew;
+
+            
+            for (auto column : location_data->tableData.get()->columns()) {
+                resultsArrayNew.push_back(column);
+            }
+            
+            resultsArrayNew.push_back(location_data->distanceArray.ValueOrDie());
+            resultsArrayNew.push_back(location_data->outlatsArray.ValueOrDie());
+            resultsArrayNew.push_back(location_data->outlonsArray.ValueOrDie());
+            resultsArrayNew.push_back(valuesArray.ValueOrDie());
+
+            auto rbatch = arrow::RecordBatch::Make(schema_new, numberOfPoints, resultsArrayNew);
 
             //std::cout << rbatch->ToString();
 
