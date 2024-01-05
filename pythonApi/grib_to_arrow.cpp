@@ -1,7 +1,7 @@
 #include "../src/gribreader.hpp"
 #include "../src/gribmessage.hpp"
 
-#define USE_CMAKE
+// #define USE_CMAKE
 
 #ifdef USE_CMAKE
     #include "../pybind11/include/pybind11/pybind11.h"

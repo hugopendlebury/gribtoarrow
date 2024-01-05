@@ -8,6 +8,20 @@ import requests
 import tarfile
 import subprocess
 from glob import glob
+import platform
+from enum import Enum
+
+class OSEnv(Enum):
+    LINUX = 1
+    OSX = 2
+
+def getSystem():
+    os = platform.system().lower()
+    if os == 'linux':
+        return OSEnv.LINUX
+    elif os == 'darwin':
+        return OSEnv.OSX
+    raise Exception("Unsupported Operating system")
 
 def getCMakePath() -> str:
     #The poetry file specifies the cmake package which will install the latest version
@@ -101,18 +115,25 @@ def build(setup_kwargs: Dict[str, Any]) -> None:
 
     #Note osx uses clang++ as the compiler which doesn't use the same as -Wl,-Bstatic 
     #for static linking. Test for compiler first ?
+    #GCC version 9 or less want 2a as standard not 20
+    os = getSystem()
+    standard = '20' if os == OSEnv.OSX else '2a'
+
+    compiler_args = ['-O3']
+    additional_compiler_args = [] if os == OSEnv.OSX else ['-fpermissive']
+    compiler_args.extend(additional_compiler_args)
 
     ext_modules = [
         Pybind11Extension(
             "gribtoarrow", 
             glob("pythonApi/*.cpp") + glob("src/*.cpp"),
             include_dirs=[".",  get_eccodes_include_path(), pyarrow.get_include()],
-            extra_compile_args=['-O3'],
+            extra_compile_args=compiler_args,
             extra_link_args= arrow_libs + arrow_link + [f"-L{get_eccodes_lib_path()}", 
                                                         '-leccodes_memfs', 
                                                         '-larrow_python'] ,
             language='c++',
-            cxx_std=20
+            cxx_std=standard
         ),
     ]
     setup_kwargs.update({
