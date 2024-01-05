@@ -41,6 +41,7 @@ class GribMessage
         string getDate();
         chrono::system_clock::time_point getChronoDate();
         string getTime();
+        chrono::system_clock::time_point getObsDate();
         long getDateNumeric();
         long getTimeNumeric();
         long getParameterId();

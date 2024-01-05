@@ -1,7 +1,7 @@
 #include "../src/gribreader.hpp"
 #include "../src/gribmessage.hpp"
 
-//#define USE_CMAKE
+#define USE_CMAKE
 
 #ifdef USE_CMAKE
     #include "../pybind11/include/pybind11/pybind11.h"
@@ -52,6 +52,7 @@ PYBIND11_MODULE(gribtoarrow, m)
         .def("getDateNumeric", &GribMessage::getDateNumeric, pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("getTimeNumeric", &GribMessage::getTimeNumeric, pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("getChronoDate", &GribMessage::getChronoDate, pybind11::call_guard<pybind11::gil_scoped_release>())
+        .def("getObsDate", &GribMessage::getObsDate, pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("getLatitudeOfFirstPoint", &GribMessage::getLatitudeOfFirstPoint, pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("getLongitudeOfFirstPoint", &GribMessage::getLongitudeOfFirstPoint, pybind11::call_guard<pybind11::gil_scoped_release>())
         .def("getLatitudeOfLastPoint", &GribMessage::getLatitudeOfLastPoint, pybind11::call_guard<pybind11::gil_scoped_release>())

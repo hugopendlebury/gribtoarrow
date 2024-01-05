@@ -73,7 +73,18 @@ using namespace std;
         //stringstream ss(date);
         strptime(date.c_str(), "%Y%m%d", &tm);
         //ss >> get_time(&tm, "%Y%m%d");
+        
         return std::chrono::system_clock::from_time_t(std::mktime(&tm));
+    }
+
+    chrono::system_clock::time_point GribMessage::getObsDate() {
+        auto dt = getChronoDate();
+        //TODO - this is flakey but follows current logic
+        //amend to use the stepUnit and not assume all steps are unit "h"
+        auto hours = getStep();
+        dt += std::chrono::hours(hours);
+        return dt;
+        
     }
 
     string GribMessage::getTime() { 

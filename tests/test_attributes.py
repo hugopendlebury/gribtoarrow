@@ -36,6 +36,7 @@ class TestFilterMessageId:
         assert 20231208 == message.getDateNumeric()
         assert 0 == message.getTimeNumeric()
         assert datetime.datetime(2023, 12, 8) == message.getChronoDate()
+        assert datetime.datetime(2023, 12, 8, 3, 0) == message.getObsDate()
         assert 90.0 == message.getLatitudeOfFirstPoint()
         assert 0.0 == message.getLongitudeOfFirstPoint()
         assert -90.0 == message.getLatitudeOfLastPoint()
