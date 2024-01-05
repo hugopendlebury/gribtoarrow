@@ -1,5 +1,3 @@
-# build.py
-
 from typing import Any, Dict
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 import pyarrow
@@ -9,13 +7,11 @@ from pathlib import Path
 import requests
 import tarfile
 import subprocess
-from pprint import pprint
 from glob import glob
 
 def getCMakePath() -> str:
     #The poetry file specifies the cmake package which will install the latest version
     #of cmake into our site-packages folder. 
-    #we will find this location so we can just shell out and build eccodes
     for location in site.getsitepackages():
         packages = os.listdir(location)
         if 'cmake' in packages:
@@ -60,9 +56,7 @@ def getEccodes() -> Path:
 
 
 def runCmd(cmd, args=None):
-    print(f"Executing {cmd} with args")
-    pprint(args)
-    print("Compiling eccodes")
+    print(f"Executing {cmd} with args {args}")
     executeCmd = [cmd] 
     if args is not None:
         executeCmd.extend(args)
@@ -80,7 +74,7 @@ def buildEccodes():
     print(f"cmake_path =  {cmake_path}")
     cmake_args = [
         f"-DCMAKE_INSTALL_PREFIX={get_temp_eccodes_path()}", #install into our temp dir
-        f"-DBUILD_SHARED_LIBS=BOTH", #We want both static and dynamic libs
+        f"-DBUILD_SHARED_LIBS=OFF", #We only want a static lib
         f"-DENABLE_JPG=OFF",
         f"-DENABLE_EXAMPLES=OFF",
         f"-DENABLE_NETCDF=OFF", #Not bothered about installing this conversion tool
@@ -99,13 +93,14 @@ def buildEccodes():
 
 def build(setup_kwargs: Dict[str, Any]) -> None:
 
-    if setup_kwargs.get("build_eccodes", False):
+    if setup_kwargs.get("build_eccodes", True):
         buildEccodes()
 
     arrow_libs = [f"-L{lib}" for lib in pyarrow.get_library_dirs()]
     arrow_link = [f"-Wl,-rpath,{lib}" for lib in pyarrow.get_library_dirs()]
 
-    glob("src/*.cpp")
+    #Note osx uses clang++ as the compiler which doesn't use the same as -Wl,-Bstatic 
+    #for static linking. Test for compiler first ?
 
     ext_modules = [
         Pybind11Extension(
@@ -114,18 +109,14 @@ def build(setup_kwargs: Dict[str, Any]) -> None:
             include_dirs=[".",  get_eccodes_include_path(), pyarrow.get_include()],
             extra_compile_args=['-O3'],
             extra_link_args= arrow_libs + arrow_link + [f"-L{get_eccodes_lib_path()}", 
-                                                        "-hidden-llibeccodes_memfs", 
-                                                        #'-l:libeccodes_memfs.a', 
+                                                        '-leccodes_memfs', 
                                                         '-larrow_python'] ,
             language='c++',
             cxx_std=20
         ),
-
     ]
     setup_kwargs.update({
         "ext_modules": ext_modules,
         "cmd_class": {"build_ext": build_ext},
         "zip_safe": False,
-        "build_eccodes": True,
     })
-

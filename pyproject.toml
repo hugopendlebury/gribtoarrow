@@ -24,7 +24,7 @@ pytest = "^6.0.0"
 polars = "^0.20.2"
 
 [build-system]
-requires = ["poetry-core", "wheel", "setuptools-cpp", "pyarrow", "requests"]
+requires = ["poetry-core", "wheel", "setuptools-cpp", "pyarrow", "requests", "cmake"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
