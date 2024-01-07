@@ -4,15 +4,6 @@ import os
 import sys
 import pyarrow
 
-@pytest.fixture()
-def resource():
-    test_path = os.path.dirname(os.path.realpath(__file__))
-    dir_path = test_path.split(os.sep)[:-1]
-    dir_path.append("build")
-    module_path = os.sep.join(dir_path)
-    sys.path.append(module_path)
-    yield test_path
-
 class TestConversions:
     def get_2t_df(self, reader):
         # parameter 167 is 2t (temperature at 2 metres above ground level) its units are in K we cant to convert to DegreesCelcius
@@ -82,7 +73,7 @@ class TestConversions:
         stations = pl.DataFrame({"lat": [51.5054], "lon": [-0.027176]}).to_arrow()
 
         raw_results_reader = GribReader(
-            f"{resource}{os.sep}gep01.t00z.pgrb2a.0p50.f003"
+            str(resource) + "/gep01.t00z.pgrb2a.0p50.f003"
         ).withStations(stations)
 
         raw_df = self.get_2t_df(raw_results_reader)
@@ -136,7 +127,7 @@ class TestConversions:
         stations = pl.DataFrame({"lat": [51.5054], "lon": [-0.027176]}).to_arrow()
 
         raw_results_reader = GribReader(
-            f"{resource}{os.sep}gep01.t00z.pgrb2a.0p50.f003"
+            str(resource) + "/gep01.t00z.pgrb2a.0p50.f003"
         ).withStations(stations)
 
         raw_df = self.get_2t_df(raw_results_reader)
@@ -166,7 +157,7 @@ class TestConversions:
         ).to_arrow()
 
         reader = (
-            GribReader(f"{resource}{os.sep}gep01.t00z.pgrb2a.0p50.f003")
+            GribReader(str(resource) + "/gep01.t00z.pgrb2a.0p50.f003")
             .withStations(stations)
             .withConversions(conversions)
         )
@@ -189,7 +180,7 @@ class TestConversions:
         stations = pl.DataFrame({"lat": [51.5054], "lon": [-0.027176]}).to_arrow()
 
         raw_results_reader = GribReader(
-            f"{resource}{os.sep}gep01.t00z.pgrb2a.0p50.f003"
+            str(resource) + "/gep01.t00z.pgrb2a.0p50.f003"
         ).withStations(stations)
 
         raw_df = self.get_tcc_df(raw_results_reader)
@@ -244,7 +235,7 @@ class TestConversions:
         stations = pl.DataFrame({"lat": [51.5054], "lon": [-0.027176]}).to_arrow()
 
         raw_results_reader = GribReader(
-            f"{resource}{os.sep}gep01.t00z.pgrb2a.0p50.f003"
+            str(resource) + "/gep01.t00z.pgrb2a.0p50.f003"
         ).withStations(stations)
 
         raw_df = self.get_tcc_df(raw_results_reader)
@@ -276,7 +267,7 @@ class TestConversions:
         ).to_arrow()
 
         reader = (
-            GribReader(f"{resource}{os.sep}gep01.t00z.pgrb2a.0p50.f003")
+            GribReader(str(resource) + "/gep01.t00z.pgrb2a.0p50.f003")
             .withStations(stations)
             .withConversions(conversions)
         )

@@ -4,20 +4,11 @@ import os
 import sys
 import pyarrow
 
-@pytest.fixture()
-def resource():
-    test_path = os.path.dirname(os.path.realpath(__file__))
-    dir_path = test_path.split(os.sep)[:-1]
-    dir_path.append("build")
-    module_path = os.sep.join(dir_path)
-    sys.path.append(module_path)
-    yield test_path
-
 class TestFilterMessageId:
     def test_filterByMessageId(self, resource):
         from gribtoarrow import GribReader
 
-        reader = GribReader(f"{resource}{os.sep}gep01.t00z.pgrb2a.0p50.f003")
+        reader = GribReader(str(resource) + "/gep01.t00z.pgrb2a.0p50.f003")
 
         dfs = [
             pl.from_arrow(message.getData()).with_columns(

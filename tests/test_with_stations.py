@@ -4,20 +4,11 @@ import os
 import sys
 import pyarrow
 
-@pytest.fixture()
-def resource():
-    test_path = os.path.dirname(os.path.realpath(__file__))
-    dir_path = test_path.split(os.sep)[:-1]
-    dir_path.append("build")
-    module_path = os.sep.join(dir_path)
-    sys.path.append(module_path)
-    yield test_path
-
 class TestStations:
     def test_find_nearest(self, resource):
         from gribtoarrow import GribReader
 
-        raw_reader = GribReader(f"{resource}{os.sep}gep01.t00z.pgrb2a.0p50.f003")
+        raw_reader = GribReader(str(resource) + "/gep01.t00z.pgrb2a.0p50.f003")
         # Call getData on reader class without setting any stations
         df = pl.concat(pl.from_arrow(message.getData()) for message in raw_reader)
 
@@ -30,7 +21,7 @@ class TestStations:
         ).to_arrow()
 
         reader = GribReader(
-            f"{resource}{os.sep}gep01.t00z.pgrb2a.0p50.f003"
+            str(resource) + "/gep01.t00z.pgrb2a.0p50.f003"
         ).withStations(stations)
 
         df = pl.concat(
@@ -55,7 +46,7 @@ class TestStations:
         ).to_arrow()
 
         reader = GribReader(
-            f"{resource}{os.sep}gep01.t00z.pgrb2a.0p50.f003"
+            str(resource) + "/gep01.t00z.pgrb2a.0p50.f003"
         ).withStations(stations)
 
         df : pl.DataFrame = pl.concat(
