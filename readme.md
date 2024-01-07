@@ -140,6 +140,8 @@ Look at .gitignore file, pybind11 repo is ignored as we just read it.
 
 ### Compile
 
+The recommended way to create the project is to use poetry.
+
 Use an IDE / Plugin such as visual studio code 
 
 Or...
@@ -193,7 +195,22 @@ You are now ready to work with library. There are many examples of how to use it
 and the .py files in the pythonApi folder. A list of the exposed methods can be seen in grib_to_arrow.cpp in the pythonApi
 folder.
 
+## Poetry Building
 
+The poetry build performs the following steps:
+
+- Defines cmake as a dependency (this is required to build eccodes and may not be installed on the system in question)
+
+Downloads eccodes from ECMWF
+Compiles ECCODES (into a folder called temp_eccodes)
+Compiles this project using PyBind11
+    Note the following (The build of this project is done in build.py)
+    In build.py we set rpath. This is the runtime path which is baked into the shared object which will be used to look 
+    for any dependencies. The rpath is set to a folder called "eccodes" which should be in the same location the the gribtopython.so
+    The eccodes libraries are copied into a folder in "dist"
+    A folder called "lib" is also created in dist into which eccodes_memfs is copied
+    This is done so that the wheel is bundled with all of it's dependencies and everything can be found without the need 
+    to specify environment variables such as LD_LIBRARY_PATH
 
 
 
