@@ -209,7 +209,7 @@ Compiles this project using PyBind11
     This is done so that the wheel is bundled with all of it's dependencies and everything can be found without the need 
     to specify environment variables such as LD_LIBRARY_PATH
 
-    A visual representation of the files inside the wheel is given below
+A visual representation of the files inside the wheel is given below
 
     .
     ├── eccodes
@@ -231,7 +231,7 @@ Compiles this project using PyBind11
     used instead.
 
 
-    ## Documention
+## Documention
 
     Doc string have been added to grib_to_arrow and it should be possible to generate documents using Sphinx.
 

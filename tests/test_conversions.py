@@ -2,20 +2,16 @@ import polars as pl
 import pytest
 import os
 import sys
-
+import pyarrow
 
 @pytest.fixture()
 def resource():
-    # At the moment the extension is built with cmake and we have no wheel / install
-    # as a result we need to help python find our module
-    # TODO - create a wheel
     test_path = os.path.dirname(os.path.realpath(__file__))
     dir_path = test_path.split(os.sep)[:-1]
     dir_path.append("build")
     module_path = os.sep.join(dir_path)
     sys.path.append(module_path)
     yield test_path
-
 
 class TestConversions:
     def get_2t_df(self, reader):
