@@ -219,16 +219,16 @@ A visual representation of the files inside the wheel is given below
     └── lib
         └── libeccodes_memfs.dylib
 
-    As can be seen the main dynamic library gribtoarrow.cpython-312-darwin.so (will have a different name on linux) is at the root level.
-    In order for gribtoarrow to be able to use libeccodes -Wl,-rpath,$ORIGIN/eccodes in set in the linker.
-    $ORIGIN in a linux specific option an basically means the current location (which when installed will be part of site-packages)
-    So in effect gribtoarrow looks in a child folder called eccodes for libeccodes. 
-    Note how libeccodes_memfs is present twice and also in a location called "lib".
-    This isn't documented on ECMWFs page and it appread that libeccoes either has it's own rpath or look in some locations one of which
-    is ../lib (this was found via the use of strace)
+As can be seen the main dynamic library gribtoarrow.cpython-312-darwin.so (will have a different name on linux) is at the root level.
+In order for gribtoarrow to be able to use libeccodes -Wl,-rpath,$ORIGIN/eccodes in set in the linker.
+$ORIGIN in a linux specific option an basically means the current location (which when installed will be part of site-packages)
+So in effect gribtoarrow looks in a child folder called eccodes for libeccodes. 
+Note how libeccodes_memfs is present twice and also in a location called "lib".
+This isn't documented on ECMWFs page and it appread that libeccoes either has it's own rpath or look in some locations one of which
+is ../lib (this was found via the use of strace)
 
-    In the case of OSX the logic and the wheel is basically the same except rather than using $ORIGIN in the rpath @loader_path is
-    used instead.
+In the case of OSX the logic and the wheel is basically the same except rather than using $ORIGIN in the rpath @loader_path is
+used instead.
 
 
 ## Documention
