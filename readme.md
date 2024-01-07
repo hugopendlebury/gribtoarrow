@@ -164,36 +164,33 @@ Where 312 is your python version (In the case above the author is running python
 
 ### Run
 
-Currently there is no installation script, in the future it is anticipated that a wheel file will be built. 
+If you have used poetry then a wheel will be built which contains gribtoarrow and eccodes.
+The resulting ELF files on linux should be linked correctly and have the rpath set so there is no need to set LD_LIBRARY_PATH 
 
-For now either :-
+OSX should also work the same way.
 
-set the environment variable PYTHON_PATH to the build directory which contains the .so file
+If you have any issues shout out.
 
-e.g.
+Note it might be necessary to import pyarrow prior to gribtoarrow
 
-export PYTHON_PATH=/Users/hugo/Development/cpp/grib_to_arrow/build
+e.g. You might need to
 
-or 
-
-export DYLD_LIBRARY_PATH=/usr/local/lib
-python
 import pyarrow
 import gribtoarrow
 
-Or just cd into the build directory. Remember to activate your venv which contains pyarrow if you are using venv.
+This will be necessary if Poetry build the project with a different version of arrow / pyarrow than is normally installed
 
-Now type
+If this is the case your will see something like the below
 
-python
+>>> import gribtoarrow
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ImportError: dlopen(/Users/hugo/Development/cpp/grib_to_arrow/dist/temp/gribtoarrow.cpython-312-darwin.so, 0x0002): Library not loaded: @rpath/libarrow_python.dylib
 
-Which will load the python REPL and then import the library using the command below.
+This is because arrow and pyarrow are needed in the build and are linked against. However poetry uses venv so gribtoarrow is build
+against a version in a poetry venv which can't later be found.
 
-import gribtoarrow 
-
-You are now ready to work with library. There are many examples of how to use it from python in the tests folder
-and the .py files in the pythonApi folder. A list of the exposed methods can be seen in grib_to_arrow.cpp in the pythonApi
-folder.
+I might be able to play with @rpaths / @rpath-link but for now just import the system installed pyarrow first.
 
 ## Poetry Building
 
@@ -212,6 +209,29 @@ Compiles this project using PyBind11
     This is done so that the wheel is bundled with all of it's dependencies and everything can be found without the need 
     to specify environment variables such as LD_LIBRARY_PATH
 
+    A visual representation of the files inside the wheel is given below
+
+    .
+    ├── eccodes
+    │   ├── libeccodes.dylib
+    │   └── libeccodes_memfs.dylib
+    ├── gribtoarrow.cpython-312-darwin.so
+    └── lib
+        └── libeccodes_memfs.dylib
+
+    As can be seen the main dynamic library gribtoarrow.cpython-312-darwin.so (will have a different name on linux) is at the root level.
+    In order for gribtoarrow to be able to use libeccodes -Wl,-rpath,$ORIGIN/eccodes in set in the linker.
+    $ORIGIN in a linux specific option an basically means the current location (which when installed will be part of site-packages)
+    So in effect gribtoarrow looks in a child folder called eccodes for libeccodes. 
+    Note how libeccodes_memfs is present twice and also in a location called "lib".
+    This isn't documented on ECMWFs page and it appread that libeccoes either has it's own rpath or look in some locations one of which
+    is ../lib (this was found via the use of strace)
+
+    In the case of OSX the logic and the wheel is basically the same except rather than using $ORIGIN in the rpath @loader_path is
+    used instead.
 
 
+    ## Documention
+
+    Doc string have been added to grib_to_arrow and it should be possible to generate documents using Sphinx.
 

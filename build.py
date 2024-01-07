@@ -175,7 +175,8 @@ def build(setup_kwargs: Dict[str, Any]) -> None:
  
     #Note rpath and origin eccodes we are telling the linker to look for dependencies in ./eccodes which will be a 
     #folder we create inside the wheel
-    eccodes_linker = [f"-L{get_eccodes_lib_path()}", "-Wl,-rpath,$ORIGIN/eccodes", "-leccodes", "-leccodes_memfs"]
+    rpath_location = "@loader_path" if os == OSEnv.OSX else "$ORIGIN"
+    eccodes_linker = [f"-L{get_eccodes_lib_path()}", f"-Wl,-rpath,{rpath_location}/eccodes", "-leccodes", "-leccodes_memfs"]
     arrow_libs = [f"-L{lib}" for lib in pyarrow.get_library_dirs()]
     arrow_link = [f"-Wl,-rpath,{lib}" for lib in pyarrow.get_library_dirs()]
 
