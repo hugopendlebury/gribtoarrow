@@ -1,6 +1,6 @@
 #include <vector>
 #include <algorithm>
-#include <ranges>
+//#include <ranges>
 #include <arrow/api.h>
 #include <arrow/dataset/dataset.h>
 #include <arrow/compute/api.h>
@@ -74,16 +74,27 @@ GribReader GribReader::withConversions(std::shared_ptr<arrow::Table> conversions
                             make_pair(conversionTypes::Divide , row.divisionValue)
         };
 
-        auto match = ranges::find_if(methods, [](const pair<conversionTypes, optional<double>>& v) {
-            return v.second.has_value();
-        });
+        pair<conversionTypes, optional<double>> firstMatch;
+        bool match = false;
+        for(auto row: methods) {
+            if(row.second.has_value()) {
+                match = true;
+                firstMatch = row;
+            }
 
-        if (match != methods.end()) {
+        }
+
+        //REMOVED THIS - Only present in newer compilers
+        //auto match = ranges::find_if(methods, [](const pair<conversionTypes, optional<double>>& v) {
+        //    return v.second.has_value();
+        //});
+
+        if (match) {
             cout << "Adding to cache for " << row.parameterId << endl;
  
             std::function<arrow::Result<arrow::Datum>(arrow::Datum, arrow::Datum)> conversionFunc;
 
-            switch(match->first) {
+            switch(firstMatch.first) {
                 case conversionTypes::Add:
                     conversionFunc = [](arrow::Datum lhs, arrow::Datum rhs) {
                         return cp::Add(lhs, rhs);
@@ -106,7 +117,7 @@ GribReader GribReader::withConversions(std::shared_ptr<arrow::Table> conversions
                     break;
             }
 
-            auto converter = new Converter(conversionFunc, match->second.value());
+            auto converter = new Converter(conversionFunc, firstMatch.second.value());
 
             conversion_funcs.emplace(row.parameterId, converter);
              
