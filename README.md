@@ -213,8 +213,8 @@ A visual representation of the files inside the wheel is given below
 
     .
     ├── eccodes
-    │   ├── libeccodes.dylib
-    │   └── libeccodes_memfs.dylib
+    │   ├── libeccodes.dylib
+    │   └── libeccodes_memfs.dylib
     ├── gribtoarrow.cpython-312-darwin.so
     └── lib
         └── libeccodes_memfs.dylib
@@ -234,4 +234,3 @@ used instead.
 ## Documention
 
     Doc string have been added to grib_to_arrow and it should be possible to generate documents using Sphinx.
-
