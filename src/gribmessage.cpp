@@ -123,6 +123,10 @@ using namespace std;
         return getStep() * getStepRange();
     }
 
+    long GribMessage::getEditionNumber() { 
+        return getNumericParameter("editionNumber");
+    }
+
     long GribMessage::getNumberOfPoints() {
         return getNumericParameter("numberOfPoints");
     }
@@ -135,7 +139,7 @@ using namespace std;
         return (int)getNumericParameter("jScansPositively") == 1 ;
     }
 
-    std::shared_ptr<arrow::RecordBatch> GribMessage::getData() {
+    std::shared_ptr<arrow::Table> GribMessage::getData() {
 
         double *lats, *lons, *values; /* arrays */
         long numberOfPoints = getNumberOfPoints();
@@ -173,15 +177,21 @@ using namespace std;
 
         // The schema can be built from a vector of fields, and we do so here.
         schema = arrow::schema({field_lats, field_lons, field_values});
+
+        /*
         std::shared_ptr<arrow::RecordBatch> rbatch;
         // The RecordBatch needs the schema, length for columns, which all must match,
         // and the actual data itself.
         rbatch = arrow::RecordBatch::Make(schema, numberOfPoints, {latsArray.ValueOrDie(), 
                                 lonsArray.ValueOrDie(), valuesArray.ValueOrDie()});
 
+        */
         //std::cout << rbatch->ToString();
 
-        return rbatch;
+        auto table = arrow::Table::Make(schema, {latsArray.ValueOrDie(), 
+                                lonsArray.ValueOrDie(), valuesArray.ValueOrDie()}, numberOfPoints);
+
+        return table;
     }
 
     GribMessage::~GribMessage() {
@@ -326,7 +336,7 @@ using namespace std;
     }
 
 
-   std::shared_ptr<arrow::RecordBatch> GribMessage::getDataWithStations() {
+   std::shared_ptr<arrow::Table> GribMessage::getDataWithStations() {
 
         if (reader->hasStations()) {
 
@@ -373,25 +383,27 @@ using namespace std;
             fields.push_back(arrow::field("nearestlongitude", arrow::float64()));
             fields.push_back(arrow::field("value", arrow::float64()));
 
-            auto schema_new = arrow::schema(fields);
+            auto schema = arrow::schema(fields);
 
-            std::vector<std::shared_ptr<arrow::Array>> resultsArrayNew;
+            std::vector<std::shared_ptr<arrow::Array>> resultsArray;
 
             
             for (auto column : location_data->tableData.get()->columns()) {
-                resultsArrayNew.push_back(column);
+                resultsArray.push_back(column);
             }
             
-            resultsArrayNew.push_back(location_data->distanceArray.ValueOrDie());
-            resultsArrayNew.push_back(location_data->outlatsArray.ValueOrDie());
-            resultsArrayNew.push_back(location_data->outlonsArray.ValueOrDie());
-            resultsArrayNew.push_back(valuesArray.ValueOrDie());
+            resultsArray.push_back(location_data->distanceArray.ValueOrDie());
+            resultsArray.push_back(location_data->outlatsArray.ValueOrDie());
+            resultsArray.push_back(location_data->outlonsArray.ValueOrDie());
+            resultsArray.push_back(valuesArray.ValueOrDie());
 
-            auto rbatch = arrow::RecordBatch::Make(schema_new, numberOfPoints, resultsArrayNew);
+            //auto rbatch = arrow::RecordBatch::Make(schema, numberOfPoints, resultsArrayNew);
+
+            auto table = arrow::Table::Make(schema, resultsArray, numberOfPoints);
 
             //std::cout << rbatch->ToString();
 
-            return rbatch;
+            return table;
 
         }
     }

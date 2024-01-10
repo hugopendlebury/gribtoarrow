@@ -1,7 +1,7 @@
 #include "../src/gribreader.hpp"
 #include "../src/gribmessage.hpp"
 
-//#define USE_CMAKE
+#define USE_CMAKE
 
 #ifdef USE_CMAKE
     #include "../pybind11/include/pybind11/pybind11.h"
@@ -145,6 +145,9 @@ PYBIND11_MODULE(gribtoarrow, m)
         )EOL") 
         .def("jScansPositively", &GribMessage::jScansPositively, pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
             Return if the j(s) scan positively in the grid              
+        )EOL") 
+            .def("getEditionNumber", &GribMessage::getEditionNumber, pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
+            Return if the grib version e.g. 1/2              
         )EOL") 
         .doc() = R"EOL(
             This class provides the ability to access attributes such as the parameterId  
