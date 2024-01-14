@@ -20,12 +20,18 @@ using namespace std;
     GribMessage::GribMessage(GribReader* reader, 
                             codes_handle* codes_handle,
                              long message_id) : 
-                                        reader(reader), 
-                                                h(codes_handle),
-                                                message_id(message_id) { }
+                                        _reader(reader), 
+                                        h(codes_handle),
+                                        _message_id(message_id) 
+                                        { 
+        //auto gd = this->getGridDefinitionTemplateNumber();
+       // std::cout << "Template number is " << gd << std::endl;
+        //gridDefinitionTemplateNumber = 10l;
+        //gridDefinitionTemplateNumber = this->getGridDefinitionTemplateNumber();
+    }
 
     long GribMessage::getGribMessageId() {
-        return message_id;
+        return _message_id;
     }
 
     string GribMessage::getCodesHandleAddress() {
@@ -56,6 +62,25 @@ using namespace std;
 
     double GribMessage::getLongitudeOfLastPoint() {
         return getDoubleParameter("longitudeOfLastGridPointInDegrees");
+    }
+
+    double GribMessage::getStandardisedLongitudeOfFirstPoint() {
+        //TODO UNDERSTAND MORE ABOUT HOW THIS CHANGES
+        auto longitude = this->getLongitudeOfFirstPoint();
+        if (longitude == 0) {
+            longitude -= 180;
+        }
+
+        return longitude;
+    }
+    double GribMessage::getStandardisedLongitudeOfLastPoint() {
+        //TODO UNDERSTAND MORE ABOUT HOW THIS CHANGES
+        auto longitude = this->getLongitudeOfLastPoint();
+        if (longitude == 359.5) {
+            longitude -= 180;
+        }
+
+        return longitude;
     }
 
     string GribMessage::getShortName() { 
@@ -129,6 +154,10 @@ using namespace std;
 
     long GribMessage::getNumberOfPoints() {
         return getNumericParameter("numberOfPoints");
+    }
+
+    long GribMessage::getGridDefinitionTemplateNumber() {
+        return getNumericParameterOrDefault("gridDefinitionTemplateNumber", -1);
     }
 
     bool GribMessage::iScansNegatively() {
@@ -218,6 +247,12 @@ using namespace std;
         return parameterId;
     }
 
+    long GribMessage::getNumericParameterOrDefault(string parameterName, long defaultValue) {
+        long parameterId = defaultValue;
+        auto ret = codes_get_long(h, parameterName.c_str(), &parameterId);   
+        return ret == 0 ? parameterId : defaultValue;
+    }
+
     double GribMessage::getDoubleParameter(string parameterName) {
         double parameterId;
         codes_get_double(h, parameterName.c_str(), &parameterId);
@@ -225,10 +260,11 @@ using namespace std;
     }
 
     unique_ptr<GridArea> GribMessage::getGridArea() {
+        //Note here we are using a standardised version of longitude
         auto lat1 = getLatitudeOfFirstPoint();
-        auto lon1 = getLongitudeOfFirstPoint();
+        auto lon1 = getStandardisedLongitudeOfFirstPoint();
         auto lat2 = getLatitudeOfLastPoint();
-        auto lon2 = getLongitudeOfLastPoint();
+        auto lon2 = getStandardisedLongitudeOfLastPoint();
         auto iDirection = iScansNegatively();
         auto jDirection = jScansPositively();
 
@@ -253,13 +289,13 @@ using namespace std;
 
     GribLocationData* GribMessage::getLocationData(std::unique_ptr<GridArea> gridArea) {
 
-        auto cache_results = reader->getLocationDataFromCache(gridArea);
+        auto cache_results = _reader->getLocationDataFromCache(gridArea);
 
         if(cache_results.has_value()) {
             return cache_results.value();
         } 
         else {
-            auto stations_shared = reader->getStations(gridArea);
+            auto stations_shared = _reader->getStations(gridArea);
             auto stations = stations_shared.get();
             //Ok we have an arrow table - get the pointers
             auto lats = stations->GetColumnByName("lat");
@@ -326,7 +362,7 @@ using namespace std;
                                                     outlonsArray,
                                                     stations_shared.get()->CombineChunksToBatch().ValueOrDie());
 
-            auto result = reader->addLocationDataToCache(gridArea, cache_data);
+            auto result = _reader->addLocationDataToCache(gridArea, cache_data);
 
             printf("set values in cache with numberOfPoints = %ld", numberOfPoints);
 
@@ -338,7 +374,7 @@ using namespace std;
 
    std::shared_ptr<arrow::Table> GribMessage::getDataWithStations() {
 
-        if (reader->hasStations()) {
+        if (_reader->hasStations()) {
 
             auto gridArea = getGridArea();
 
@@ -359,7 +395,7 @@ using namespace std;
 
             //apply any conversion
             auto parameterId = getParameterId();
-            auto conversionFunc = reader->getConversions(parameterId);
+            auto conversionFunc = _reader->getConversions(parameterId);
 
             if(conversionFunc.has_value()) {
                 auto func = conversionFunc.value();

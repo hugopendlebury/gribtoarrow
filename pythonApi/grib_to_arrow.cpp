@@ -1,7 +1,7 @@
 #include "../src/gribreader.hpp"
 #include "../src/gribmessage.hpp"
 
-#define USE_CMAKE
+// #define USE_CMAKE
 
 #ifdef USE_CMAKE
     #include "../pybind11/include/pybind11/pybind11.h"
@@ -131,6 +131,9 @@ PYBIND11_MODULE(gribtoarrow, m)
         )EOL") 
         .def("getLongitudeOfLastPoint", &GribMessage::getLongitudeOfLastPoint, pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
             Gets the Longitude of the last point in the message                
+        )EOL") 
+        .def("getGridDefinitionTemplateNumber", &GribMessage::getGridDefinitionTemplateNumber, pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
+            Gets the grid defintion template number               
         )EOL") 
         .def("getData", &GribMessage::getData, pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
             Gets the Data from the message

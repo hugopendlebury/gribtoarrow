@@ -25,16 +25,23 @@ class GribMessage
 
     public:
 
-        codes_handle* h;
-
         GribMessage(GribReader* reader, 
                     codes_handle* handle, 
                     long message_id);
+
+        codes_handle* h;
         long getGribMessageId();
         double getLatitudeOfFirstPoint();
         double getLongitudeOfFirstPoint();
         double getLatitudeOfLastPoint();
         double getLongitudeOfLastPoint();
+
+        //In some instances different coordinate systems appear to be used
+        //eg sometime it's -180 / 180 (Mercator)
+        //   othertimes it's 0 / 360
+        double getStandardisedLongitudeOfFirstPoint();
+        double getStandardisedLongitudeOfLastPoint();
+
         string getShortName();
         string getCodesHandleAddress();
         string getObjectAddress();
@@ -52,6 +59,7 @@ class GribMessage
         long getHourOffset();
         long getEditionNumber();
         long getNumberOfPoints();
+        long getGridDefinitionTemplateNumber();
         bool iScansNegatively();
         bool jScansPositively();
         std::shared_ptr<arrow::Table> getData();
@@ -64,12 +72,14 @@ class GribMessage
 
         string getStringParameter(string parameterName);
         long getNumericParameter(string parameterName);
+        long getNumericParameterOrDefault(string parameterName, long defaultValue);
         double getDoubleParameter(string parameterName);
         std::unique_ptr<GridArea> getGridArea();
         std::vector<double> colToVector(std::shared_ptr<arrow::ChunkedArray> columnArray);
         GribLocationData* getLocationData(std::unique_ptr<GridArea> gridArea);
-        GribReader* reader;
-        long message_id;
+        GribReader* _reader;
+        long _message_id;
+        long gridDefinitionTemplateNumber;
    
 };
 

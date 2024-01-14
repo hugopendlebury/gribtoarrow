@@ -172,12 +172,11 @@ std::shared_ptr<arrow::Table> GribReader::getStations(std::unique_ptr<GridArea>&
             std::cout << "Found area" << std::endl;
     }
     else {
-            std::cout << "No area found will add areas\n";
-
             auto latDirection = ga.m_jScansPositively;   
             auto lonDirection = ga.m_iScansNegatively;         
 
             cp::Expression c1, c2, c3, c4;
+
             if(latDirection) {
                 c1 = cp::greater_equal(cp::field_ref("lat"), cp::literal(ga.m_latitudeOfFirstPoint));
                 c2 = cp::less_equal(cp::field_ref("lat"), cp::literal(ga.m_latitudeOfLastPoint));
@@ -185,7 +184,6 @@ std::shared_ptr<arrow::Table> GribReader::getStations(std::unique_ptr<GridArea>&
                 c1 = cp::less_equal(cp::field_ref("lat"), cp::literal(ga.m_latitudeOfFirstPoint));
                 c2 = cp::greater_equal(cp::field_ref("lat"), cp::literal(ga.m_latitudeOfLastPoint));
             }
-
             if(lonDirection) {
                 c3 = cp::less_equal(cp::field_ref("lon"), cp::literal(ga.m_longitudeOfFirstPoint));
                 c4 = cp::greater_equal(cp::field_ref("lon"), cp::literal(ga.m_longitudeOfLastPoint));
@@ -194,7 +192,7 @@ std::shared_ptr<arrow::Table> GribReader::getStations(std::unique_ptr<GridArea>&
                 c4 = cp::less_equal(cp::field_ref("lon"), cp::literal(ga.m_longitudeOfLastPoint));
             }
 
-            auto filterCondition = cp::and_({c1,c2});
+            auto filterCondition = cp::and_({c1,c2,c3,c4});
 
             // Wrap the Table in a Dataset so we can use a Scanner
             std::shared_ptr<arrow::dataset::Dataset> dataset =
