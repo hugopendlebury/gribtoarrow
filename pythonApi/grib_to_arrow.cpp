@@ -33,12 +33,25 @@ PYBIND11_MODULE(gribtoarrow, m)
             ----------
             filepath (str): A string containing the full path of the grib file                  
         )EOL") // constructor
-        .def("withStations", &GribReader::withStations, pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
+        .def("withStations", py::overload_cast<std::shared_ptr<arrow::Table>>(&GribReader::withStations), pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
             Adds locations which will be filtered in each message. 
 
             Parameters
             ----------
             stations (pyArrow.Table): A PyArrow table which contains a minimum of 2 columns called lat and lon
+
+            The grib will be filtered by any of the coordinated given by lat and lon which are within the grid of 
+            the underlying message.
+            Any additional columns passed in the table will be passed through in the results when  getDataWithStations
+            is called on the message. e.g. if you passed a table with the columns "LocationName, Country, lat, lon" then 
+            the fields of LocationName and Country would also be present in the results of the message.                 
+        )EOL")
+        .def("withStations", py::overload_cast<std::string>(&GribReader::withStations), pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
+            Adds locations which will be filtered in each message. 
+
+            Parameters
+            ----------
+            path (string): Path to a csv containing minimum two columns called lat and lon
 
             The grib will be filtered by any of the coordinated given by lat and lon which are within the grid of 
             the underlying message.

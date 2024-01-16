@@ -14,6 +14,7 @@
 #include <arrow/compute/api_scalar.h>
 #include <arrow/dataset/file_ipc.h>
 #include <arrow/compute/expression.h>
+#include <arrow/csv/api.h>
 #include <iostream>
 #include "arrowutils.hpp"
 #include "caster.hpp"
@@ -46,6 +47,19 @@ GribReader::GribReader(string filepath) : filepath(filepath) {
 GribReader GribReader::withStations(std::shared_ptr<arrow::Table> stations) {
     //TODO - add some validation
     //the table should contain 2 columns "lat" and "lon"
+    this->shared_stations = stations;
+    return *this;
+}
+
+GribReader GribReader::withStations(std::string path){
+    std::shared_ptr<arrow::io::ReadableFile> infile = arrow::io::ReadableFile::Open(path).ValueOrDie();
+    auto csv_reader =
+        arrow::csv::TableReader::Make(
+            arrow::io::default_io_context(), infile, arrow::csv::ReadOptions::Defaults(),
+            arrow::csv::ParseOptions::Defaults(), arrow::csv::ConvertOptions::Defaults()).ValueOrDie();
+    
+    std::shared_ptr<arrow::Table> stations = csv_reader->Read().ValueOrDie();
+
     this->shared_stations = stations;
     return *this;
 }

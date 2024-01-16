@@ -30,6 +30,7 @@ public:
     GribReader(string filepath);
 
     GribReader withStations(std::shared_ptr<arrow::Table> stations) ;
+    GribReader withStations(std::string path);
     GribReader withConversions(std::shared_ptr<arrow::Table> conversions) ;
 
     Iterator begin();
