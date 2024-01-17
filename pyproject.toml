@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "grib-to-arrow"
-version = "0.1.4"
+version = "0.1.9"
 description = "grib_to_arrow is a python module to export data in the GRIB format to Apache Arrow"
-authors = ["Hugo Pendlebury"]
+authors = ["Hugo Pendlebury", "Lewis Wilkins"]
 readme = "README.md"
 
 [tool.poetry.build]
@@ -10,7 +10,7 @@ script = "build.py"
 generate-setup-file = true
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.9"
 pyarrow = "^14.0.2"
 pybind11 = "^2.11.1"
 cmake = "^3.28.1"
