@@ -243,5 +243,27 @@ std::shared_ptr<arrow::Table> GribReader::getTableFromCsv(std::string path){
     
     std::shared_ptr<arrow::Table> table = csv_reader->Read().ValueOrDie();
 
+    //Append an additional column to the table called surrogate key
+    auto numberOfRows = table.get()->num_rows();
+    auto surrogate_columns = createSurrogateKeyCol(numberOfRows);
+    auto skField = arrow::field("surrogate_key", arrow::uint16());
+    auto chunkedArray = std::make_shared<arrow::ChunkedArray>(arrow::ChunkedArray(surrogate_columns.ValueOrDie()));
+    table = table.get()->AddColumn(0, skField, chunkedArray).ValueOrDie();
+
     return table;
 }
+
+arrow::Result<std::shared_ptr<arrow::Array>> GribReader::createSurrogateKeyCol(long numberOfRows){
+
+    vector<uint16_t> row_ids;
+    for(auto i =0 ; i <  numberOfRows; ++i) {
+        row_ids.emplace_back(i);
+    }
+
+    arrow::UInt16Builder surrogateBuilder;
+    ARROW_RETURN_NOT_OK(surrogateBuilder.AppendValues(row_ids));
+    std::shared_ptr<arrow::Array> arrayValues;
+    ARROW_ASSIGN_OR_RAISE(arrayValues,surrogateBuilder.Finish());
+    return arrayValues;
+
+ }

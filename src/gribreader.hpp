@@ -56,6 +56,7 @@ public:
         std::unordered_map<int64_t, Converter*> conversion_funcs;
         GribMessage*        m_endMessage;
         std::shared_ptr<arrow::Table> getTableFromCsv(std::string path);
+        arrow::Result<std::shared_ptr<arrow::Array>> createSurrogateKeyCol(long numberOfRows);
 
 
 };

@@ -22,10 +22,10 @@ class TestStations:
 
         reader = GribReader(
             str(resource) + "/gep01.t00z.pgrb2a.0p50.f003"
-        ).withStations(stations)
+        ).withLocations(stations)
 
         df = pl.concat(
-            pl.from_arrow(message.getDataWithStations()) for message in reader
+            pl.from_arrow(message.getDataWithLocations()) for message in reader
         )
 
         # The underlying Grib has 85 messages so we expect 170 rows
@@ -47,10 +47,10 @@ class TestStations:
 
         reader = GribReader(
             str(resource) + "/gep01.t00z.pgrb2a.0p50.f003"
-        ).withStations(stations)
+        ).withLocations(stations)
 
         df : pl.DataFrame = pl.concat(
-            pl.from_arrow(message.getDataWithStations()) for message in reader
+            pl.from_arrow(message.getDataWithLocations()) for message in reader
         )
 
         # The underlying Grib has 85 messages so we expect 170 rows

@@ -69,3 +69,6 @@ class TestLocations:
         assert len(df.filter(pl.col("location_id") == 1)) == 268
         assert len(df.filter(pl.col("location_id") == 2)) == 242
         assert "location_name" in df.columns
+        assert "surrogate_key" in df.columns
+        assert all(0 == field for field in df.filter(pl.col("location_name") == "kristiansand")['surrogate_key'])
+        assert all(1 == field for field in df.filter(pl.col("location_name") == "Bergen")['surrogate_key'])
