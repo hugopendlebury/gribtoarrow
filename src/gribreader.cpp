@@ -52,14 +52,7 @@ GribReader GribReader::withStations(std::shared_ptr<arrow::Table> stations) {
 }
 
 GribReader GribReader::withStations(std::string path){
-    std::shared_ptr<arrow::io::ReadableFile> infile = arrow::io::ReadableFile::Open(path).ValueOrDie();
-    auto csv_reader =
-        arrow::csv::TableReader::Make(
-            arrow::io::default_io_context(), infile, arrow::csv::ReadOptions::Defaults(),
-            arrow::csv::ParseOptions::Defaults(), arrow::csv::ConvertOptions::Defaults()).ValueOrDie();
-    
-    std::shared_ptr<arrow::Table> stations = csv_reader->Read().ValueOrDie();
-
+    std::shared_ptr<arrow::Table> stations = getTableFromCsv(path);
     this->shared_stations = stations;
     return *this;
 }
@@ -239,4 +232,16 @@ std::shared_ptr<arrow::Table> GribReader::getStations(std::unique_ptr<GridArea>&
 
 bool GribReader::hasStations() {
     return shared_stations.use_count() > 0;
+}
+
+std::shared_ptr<arrow::Table> GribReader::getTableFromCsv(std::string path){
+    std::shared_ptr<arrow::io::ReadableFile> infile = arrow::io::ReadableFile::Open(path).ValueOrDie();
+    auto csv_reader =
+        arrow::csv::TableReader::Make(
+            arrow::io::default_io_context(), infile, arrow::csv::ReadOptions::Defaults(),
+            arrow::csv::ParseOptions::Defaults(), arrow::csv::ConvertOptions::Defaults()).ValueOrDie();
+    
+    std::shared_ptr<arrow::Table> table = csv_reader->Read().ValueOrDie();
+
+    return table;
 }

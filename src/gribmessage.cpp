@@ -91,6 +91,10 @@ using namespace std;
         return getStringParameter("date");
     }
 
+    string GribMessage::getDataType() {
+        return getStringParameter("dataType");
+    }
+
     chrono::system_clock::time_point GribMessage::getChronoDate() {
         tm tm = {};
         string date = to_string(getDateNumeric());

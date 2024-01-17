@@ -115,6 +115,9 @@ PYBIND11_MODULE(gribtoarrow, m)
             Gets the date of the message as a string 
             If you don't want to apply any conversion then use  getChronoDate which will return a datetime object              
         )EOL") 
+        .def("getDataType", &GribMessage::getDataType, pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
+            Gets the dataType of the message as a string             
+        )EOL") 
         .def("getTime", &GribMessage::getTime, pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
             Gets the time of the message as a string   
             If you don't want to apply any conversion then use  getChronoDate which will return a datetime object                 

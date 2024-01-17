@@ -55,6 +55,7 @@ class GribMessage
         long getModelNumber();
         long getStep();
         string getStepUnits();
+        string getDataType();
         long getStepRange();
         long getHourOffset();
         long getEditionNumber();

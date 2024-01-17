@@ -29,9 +29,10 @@ public:
 
     GribReader(string filepath);
 
-    GribReader withStations(std::shared_ptr<arrow::Table> stations) ;
+    GribReader withStations(std::shared_ptr<arrow::Table> stations);
     GribReader withStations(std::string path);
-    GribReader withConversions(std::shared_ptr<arrow::Table> conversions) ;
+    GribReader withConversions(std::shared_ptr<arrow::Table> conversions);
+    // GribReader withConversions(std::string path);
 
     Iterator begin();
     Iterator end();
@@ -54,6 +55,8 @@ public:
         std::unordered_map<GridArea, GribLocationData*> location_cache;
         std::unordered_map<int64_t, Converter*> conversion_funcs;
         GribMessage*        m_endMessage;
+        std::shared_ptr<arrow::Table> getTableFromCsv(std::string path);
+
 
 };
 #endif /*GRIB_READER_H_INCLUDED*/

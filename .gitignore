@@ -2,3 +2,8 @@ build/
 dist/
 temp_eccodes/
 __pycache__/*
+CMakeFiles
+tests/__pycache__*
+CMakeCache*
+*.so
+Makefile
