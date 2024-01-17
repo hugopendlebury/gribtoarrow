@@ -64,7 +64,7 @@ class GribMessage
         bool iScansNegatively();
         bool jScansPositively();
         std::shared_ptr<arrow::Table> getData();
-        std::shared_ptr<arrow::Table> getDataWithStations();
+        std::shared_ptr<arrow::Table> getDataWithLocations();
         ~ GribMessage();
 
 
