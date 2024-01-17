@@ -32,7 +32,7 @@ public:
     GribReader withLocations(std::shared_ptr<arrow::Table> locations);
     GribReader withLocations(std::string path);
     GribReader withConversions(std::shared_ptr<arrow::Table> conversions);
-    // GribReader withConversions(std::string path);
+    GribReader withConversions(std::string path);
 
     Iterator begin();
     Iterator end();

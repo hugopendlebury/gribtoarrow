@@ -61,7 +61,7 @@ class TestConversions:
     def test_addition(self, resource):
         # In this test we will read a Grib file which was downloaded from
         # NOAA.
-        # We will filter the results to the nearest grid based on the Latiture / Longitude of Canary Wharf
+        # We will filter the results to the nearest grid based on the Latitude / Longitude of Canary Wharf
         # We will also filter the messages to shortCode 2t (parameter 167)
         # This parameter is Supplied by NOAA in Kelvin so we will convert this to Celcius.
         # The underlying Grib file was downloaded in December 2023 which was a mild winter with temperatures
@@ -115,7 +115,7 @@ class TestConversions:
     def test_subtraction(self, resource):
         # In this test we will read a Grib file which was downloaded from
         # NOAA.
-        # We will filter the results to the nearest grid based on the Latiture / Longitude of Canary Wharf
+        # We will filter the results to the nearest grid based on the Latitude / Longitude of Canary Wharf
         # We will also filter the messages to shortCode 2t (parameter 167)
         # This parameter is Supplied by NOAA in Kelvin so we will convert this to Celcius.
         # The underlying Grib file was downloaded in December 2023 which was a mild winter with temperatures
@@ -169,7 +169,7 @@ class TestConversions:
     def test_division(self, resource):
         # In this test we will read a Grib file which was downloaded from
         # NOAA.
-        # We will filter the results to the nearest grid based on the Latiture / Longitude of Canary Wharf
+        # We will filter the results to the nearest grid based on the Latitude / Longitude of Canary Wharf
         # We will also filter the messages to shortCode tcc (parameter 228164)
         # This parameter is Supplied by NOAA as a percentage we will divide by 100
         # to convert this as a range between 0-1 (the same as parameter 164)
@@ -224,7 +224,7 @@ class TestConversions:
     def test_multiplication(self, resource):
         # In this test we will read a Grib file which was downloaded from
         # NOAA.
-        # We will filter the results to the nearest grid based on the Latiture / Longitude of Canary Wharf
+        # We will filter the results to the nearest grid based on the Latitude / Longitude of Canary Wharf
         # We will also filter the messages to shortCode tcc (parameter 228164)
         # This parameter is Supplied by NOAA as a percentage we will multiple this by 0.01
         # to convert this as a range between 0-1 (the same as parameter 164)
@@ -275,3 +275,51 @@ class TestConversions:
         converted_df = self.get_tcc_df(reader)
 
         assert converted_df["value"].to_list()[0] == 1
+
+    @pytest.mark.skip(reason="Complete validation")
+    def test_csv_multiplication(self, resource):
+        # In this test we will read a Grib file which was downloaded from
+        # NOAA.
+        # We will filter the results to the nearest grid based on the Latitude / Longitude of Canary Wharf
+        # We will also filter the messages to shortCode tcc (parameter 228164)
+        # This parameter is Supplied by NOAA as a percentage we will multiple this by 0.01
+        # to convert this as a range between 0-1 (the same as parameter 164)
+
+        from gribtoarrow import GribReader
+
+        # This is the latitude / longitude of Canary wharf
+        locations = pl.DataFrame({"lat": [51.5054], "lon": [-0.027176]}).to_arrow()
+
+        raw_results_reader = GribReader(
+            str(resource) + "/gep01.t00z.pgrb2a.0p50.f003"
+        ).withLocations(locations)
+
+        raw_df = self.get_tcc_df(raw_results_reader)
+
+        print(f"VALUE IS {raw_df['value'].to_list()[0]}")
+
+        assert raw_df["value"].to_list()[0] == 100.0
+
+        # In reality the use would probably store these in a config file / CSV
+
+        df = pl.DataFrame(
+                {
+                    "parameterId": [228164],
+                    "addition_value": [None],
+                    "subtraction_value": [None],
+                    "multiplication_value": [0.01],
+                    "division_value": [None],
+                    "ceiling_value": [None],
+                }
+            ).write_csv(str(resource) + "test_conversions.csv")
+
+        reader = (
+            GribReader(str(resource) + "/gep01.t00z.pgrb2a.0p50.f003")
+            .withLocations(locations)
+            .withConversions(str(resource) + "test_conversions.csv")
+        )
+
+        converted_df = self.get_tcc_df(reader)
+
+        assert converted_df["value"].to_list()[0] == 1
+

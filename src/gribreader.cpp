@@ -52,17 +52,79 @@ GribReader GribReader::withLocations(std::shared_ptr<arrow::Table> locations) {
 }
 
 GribReader GribReader::withLocations(std::string path){
+
+    //Reads a CSV  with the location data and enriches it with a row_number / surrogate_key
+    //TODO add validation of the column names
+
     std::shared_ptr<arrow::Table> locations = getTableFromCsv(path);
+
+    //Append an additional column to the table called surrogate key
+    auto numberOfRows = locations.get()->num_rows();
+    auto surrogate_columns = createSurrogateKeyCol(numberOfRows);
+    auto skField = arrow::field("surrogate_key", arrow::uint16());
+    auto chunkedArray = std::make_shared<arrow::ChunkedArray>(arrow::ChunkedArray(surrogate_columns.ValueOrDie()));
+    locations = locations.get()->AddColumn(0, skField, chunkedArray).ValueOrDie();
+
+
     this->shared_locations = locations;
     return *this;
 }
 
-enum conversionTypes {
+enum conversionMethods {
     Add,
     Subtract,
     Multiply,
     Divide
 };
+
+enum conversionDataTypes {
+    String,
+    Float
+};
+
+
+GribReader GribReader::withConversions(std::string conversionsPath) {
+    cout << "Reading conversions CSV" << endl;
+    //TODO add validation of the column names
+    std::shared_ptr<arrow::Table> conversions = getTableFromCsv(conversionsPath);
+
+    std::unordered_map<std::string, std::string> requiredFields;
+    requiredFields.emplace(make_pair("parameterId", "int64" ));
+    requiredFields.emplace(make_pair("addition_value", "double" ));
+    requiredFields.emplace(make_pair("subtraction_value", "double" ));
+    requiredFields.emplace(make_pair("multiplication_value", "double" ));
+    requiredFields.emplace(make_pair("division_value", "double" ));
+    requiredFields.emplace(make_pair("ceiling_value", "double" ));
+
+    auto conversionsCSVTable = conversions.get();
+
+    int colIndex = 0;
+    for (auto field : conversionsCSVTable->fields()) {
+        auto colName = field->name();
+        auto it = requiredFields.find(colName);
+        if(it == requiredFields.end()){
+            //Column not found should let python know
+            std::cout << "Column " << colName << " was not found in CSV" << std::endl;
+            //TODO
+            //We should throw an exceptions here
+
+        } else {
+            std::cout << "Column " << colName << " was found in CSV" << std::endl;
+            auto required_type = it->second;
+            auto type = field.get()->type();
+            
+            //Surely there is an emum or cleaner way ?
+            if (type.get()->name() != required_type) {
+                std::cout << "type of column " << colName <<" does not match expected type recieved type  " << type->name() << std::endl;
+                
+            }
+        }
+        ++colIndex;
+    }
+
+    //withConversions(conversions);
+    return *this;
+}
 
 GribReader GribReader::withConversions(std::shared_ptr<arrow::Table> conversions) {
     cout << "Setting conversions" << endl;
@@ -74,14 +136,14 @@ GribReader GribReader::withConversions(std::shared_ptr<arrow::Table> conversions
 
         cout <<  "adding conversions" << endl ;
 
-        vector<pair<conversionTypes, optional<double>>> methods {
-                            make_pair(conversionTypes::Add, row.additionValue), 
-                            make_pair(conversionTypes::Subtract, row.subtractionValue), 
-                            make_pair(conversionTypes::Multiply, row.multiplicationValue), 
-                            make_pair(conversionTypes::Divide , row.divisionValue)
+        vector<pair<conversionMethods, optional<double>>> methods {
+                            make_pair(conversionMethods::Add, row.additionValue), 
+                            make_pair(conversionMethods::Subtract, row.subtractionValue), 
+                            make_pair(conversionMethods::Multiply, row.multiplicationValue), 
+                            make_pair(conversionMethods::Divide , row.divisionValue)
         };
 
-        pair<conversionTypes, optional<double>> firstMatch;
+        pair<conversionMethods, optional<double>> firstMatch;
         bool match = false;
         for(auto row: methods) {
             if(row.second.has_value()) {
@@ -102,22 +164,22 @@ GribReader GribReader::withConversions(std::shared_ptr<arrow::Table> conversions
             std::function<arrow::Result<arrow::Datum>(arrow::Datum, arrow::Datum)> conversionFunc;
 
             switch(firstMatch.first) {
-                case conversionTypes::Add:
+                case conversionMethods::Add:
                     conversionFunc = [](arrow::Datum lhs, arrow::Datum rhs) {
                         return cp::Add(lhs, rhs);
                     };
                     break;
-                case conversionTypes::Subtract:
+                case conversionMethods::Subtract:
                     conversionFunc = [](arrow::Datum lhs, arrow::Datum rhs) {
                         return cp::Subtract(lhs, rhs);
                     };
                     break;
-                case conversionTypes::Multiply:
+                case conversionMethods::Multiply:
                     conversionFunc = [](arrow::Datum lhs, arrow::Datum rhs) {
                         return cp::Multiply(lhs, rhs);
                     };
                     break;
-                case conversionTypes::Divide:
+                case conversionMethods::Divide:
                     conversionFunc = [](arrow::Datum lhs, arrow::Datum rhs) {
                         return cp::Divide(lhs, rhs);
                     };
@@ -242,13 +304,6 @@ std::shared_ptr<arrow::Table> GribReader::getTableFromCsv(std::string path){
             arrow::csv::ParseOptions::Defaults(), arrow::csv::ConvertOptions::Defaults()).ValueOrDie();
     
     std::shared_ptr<arrow::Table> table = csv_reader->Read().ValueOrDie();
-
-    //Append an additional column to the table called surrogate key
-    auto numberOfRows = table.get()->num_rows();
-    auto surrogate_columns = createSurrogateKeyCol(numberOfRows);
-    auto skField = arrow::field("surrogate_key", arrow::uint16());
-    auto chunkedArray = std::make_shared<arrow::ChunkedArray>(arrow::ChunkedArray(surrogate_columns.ValueOrDie()));
-    table = table.get()->AddColumn(0, skField, chunkedArray).ValueOrDie();
 
     return table;
 }

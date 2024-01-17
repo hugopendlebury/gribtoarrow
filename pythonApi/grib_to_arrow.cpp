@@ -59,7 +59,25 @@ PYBIND11_MODULE(gribtoarrow, m)
             is called on the message. e.g. if you passed a table with the columns "LocationName, Country, lat, lon" then 
             the fields of LocationName and Country would also be present in the results of the message.                 
         )EOL") 
-        .def("withConversions", &GribReader::withConversions, pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
+        .def("withConversions", py::overload_cast<std::string>(&GribReader::withConversions), pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
+            Adds conversion which be filtered in each message matching message. 
+
+            Parameters
+            ----------
+            path (string): Path to a csv containing the following fields (must have a header row and matching column names)
+            parameterId - integer
+            addition_value: int / float
+            subtraction_value: int / float
+            multiplication_value: int / float
+            division_value: int / float
+            ceiling_value:  int / float
+
+            When the paramterId in the message matches a parameterId in this table the appropriate operation will occur.
+
+            e.g. If you wanted to convert from Kelvin to Celcius you would pass a table which contained the parameterId and
+            contained 273.15 in the column subtraction_value                
+        )EOL") 
+        .def("withConversions", py::overload_cast<std::shared_ptr<arrow::Table>>(&GribReader::withConversions), pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
             Adds conversion which be filtered in each message matching message. 
 
             Parameters
@@ -72,7 +90,7 @@ PYBIND11_MODULE(gribtoarrow, m)
             division_value: arrow::float64()
             ceiling_value:  arrow::float64()
 
-            When the paramterId in the message matches a paramterId in this table the appropriate operation will occur.
+            When the paramterId in the message matches a parameterId in this table the appropriate operation will occur.
 
             e.g. If you wanted to convert from Kelvin to Celcius you would pass a table which contained the parameterId and
             contained 273.15 in the column subtraction_value                
@@ -165,7 +183,7 @@ PYBIND11_MODULE(gribtoarrow, m)
         .def("jScansPositively", &GribMessage::jScansPositively, pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
             Return if the j(s) scan positively in the grid              
         )EOL") 
-            .def("getEditionNumber", &GribMessage::getEditionNumber, pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
+        .def("getEditionNumber", &GribMessage::getEditionNumber, pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
             Return if the grib version e.g. 1/2              
         )EOL") 
         .doc() = R"EOL(
