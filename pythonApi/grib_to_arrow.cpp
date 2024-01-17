@@ -1,7 +1,7 @@
 #include "../src/gribreader.hpp"
 #include "../src/gribmessage.hpp"
 
-// #define USE_CMAKE
+s#define USE_CMAKE
 
 #ifdef USE_CMAKE
     #include "../pybind11/include/pybind11/pybind11.h"
@@ -40,9 +40,9 @@ PYBIND11_MODULE(gribtoarrow, m)
             ----------
             stations (pyArrow.Table): A PyArrow table which contains a minimum of 2 columns called lat and lon
 
-            The grib will be filtered by any of the coordinated given by lat and lon which are within the grid of 
+            The grib will be filtered by any of the coordinates given by lat and lon which are within the grid of 
             the underlying message.
-            Any additional columns passed in the table will be passed through in the results when  getDataWithLocations
+            Any additional columns passed in the table will be passed through in the results when getDataWithLocations
             is called on the message. e.g. if you passed a table with the columns "LocationName, Country, lat, lon" then 
             the fields of LocationName and Country would also be present in the results of the message.                 
         )EOL")
@@ -53,7 +53,7 @@ PYBIND11_MODULE(gribtoarrow, m)
             ----------
             path (string): Path to a csv containing minimum two columns called lat and lon
 
-            The grib will be filtered by any of the coordinated given by lat and lon which are within the grid of 
+            The grib will be filtered by any of the coordinates given by lat and lon which are within the grid of 
             the underlying message.
             Any additional columns passed in the table will be passed through in the results when  getDataWithLocations
             is called on the message. e.g. if you passed a table with the columns "LocationName, Country, lat, lon" then 

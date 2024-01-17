@@ -73,7 +73,7 @@ def getEccodes() -> Path:
         with open(save_file, 'wb') as f:
             f.write(responce.content)
             with tarfile.open(save_file) as tar:
-                print("Exctracting eccodes")
+                print("Extracting eccodes")
                 tar.extractall(temp_eccodes_dir)
             return temp_eccodes_dir / "eccodes-2.33.0-Source" 
 
