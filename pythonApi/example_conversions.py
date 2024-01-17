@@ -2,7 +2,7 @@ import polars as pl
 from gribtoarrow import GribReader
 
 #This is the latitude / longitude of Canary wharf
-stations = pl.DataFrame({'lat' : [51.5054], 'lon': [-0.027176]}).to_arrow()
+locations = pl.DataFrame({'lat' : [51.5054], 'lon': [-0.027176]}).to_arrow()
 
 conversions = (
 	pl.DataFrame({
@@ -24,20 +24,20 @@ conversions = (
 
 reader = ( 
 	GribReader("/Users/hugo/Development/cpp/grib_to_arrow/gespr.t00z.pgrb2a.0p50.f840")
-	     .withStations(stations)
+	     .withLocations(locations)
 	     .withConversions(conversions)
 )
 
 #paramter 167 is 2t (temperature at 2 metres above ground level) its units are in K we cant to convert to DegreesCelcius
 payloads = []
 for message in reader:
-    	df = (
+    df = (
 		pl.from_arrow(message.getDataWithStations())
 			.with_columns([
                      		pl.lit(message.getParameterId()).alias("paramId")
 			])
 	)
-    	payloads.append(df)
+    payloads.append(df)
 
 df = pl.concat(payloads).filter(pl.col("paramId").is_in([167]))
 

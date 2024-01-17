@@ -4,12 +4,12 @@ import os
 import sys
 import pyarrow
 
-class TestStations:
+class TestLocations:
     def test_find_nearest(self, resource):
         from gribtoarrow import GribReader
 
         raw_reader = GribReader(str(resource) + "/gep01.t00z.pgrb2a.0p50.f003")
-        # Call getData on reader class without setting any stations
+        # Call getData on reader class without setting any location based data
         df = pl.concat(pl.from_arrow(message.getData()) for message in raw_reader)
 
         # With 85 messages and 259920 points per message size should be 22093200

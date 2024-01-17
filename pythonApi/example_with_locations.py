@@ -9,9 +9,9 @@ stations = (
 
 reader = GribReader(
     "/Users/hugo/Development/cpp/grib_to_arrow/biggest.grib"
-).withStations(stations)
+).withLocations(stations)
 
-data = [pl.from_arrow(b.getDataWithStations()) for b in reader]
+data = [pl.from_arrow(b.getDataWithLocations()) for b in reader]
 df = pl.concat(data)
 
 print(f"done {len(df)} rows read")
