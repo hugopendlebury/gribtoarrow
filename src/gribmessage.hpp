@@ -55,6 +55,7 @@ class GribMessage
         long getModelNumber();
         long getStep();
         string getStepUnits();
+        string getDataType();
         long getStepRange();
         long getHourOffset();
         long getEditionNumber();
@@ -63,7 +64,7 @@ class GribMessage
         bool iScansNegatively();
         bool jScansPositively();
         std::shared_ptr<arrow::Table> getData();
-        std::shared_ptr<arrow::Table> getDataWithStations();
+        std::shared_ptr<arrow::Table> getDataWithLocations();
         ~ GribMessage();
 
 

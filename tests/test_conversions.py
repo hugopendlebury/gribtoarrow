@@ -10,7 +10,7 @@ class TestConversions:
         payloads = []
         for message in reader:
             if message.getParameterId() == 167:
-                payloads.append(pl.from_arrow(message.getDataWithStations()))
+                payloads.append(pl.from_arrow(message.getDataWithLocations()))
 
         df = pl.concat(payloads)
         return df
@@ -20,7 +20,7 @@ class TestConversions:
         payloads = []
         for message in reader:
             if message.getParameterId() == 228164:
-                payloads.append(pl.from_arrow(message.getDataWithStations()))
+                payloads.append(pl.from_arrow(message.getDataWithLocations()))
 
         df = pl.concat(payloads)
         return df
@@ -29,7 +29,7 @@ class TestConversions:
     def test_validation(self, resource):
         from gribtoarrow import GribReader
 
-        stations = pl.DataFrame({"lat": [51.5054], "lon": [-0.027176]}).to_arrow()
+        locations = pl.DataFrame({"lat": [51.5054], "lon": [-0.027176]}).to_arrow()
 
         # The table passed to the reader should contain mandatory columns
         # In this instance it is missing a field called "ceiling_value"
@@ -54,7 +54,7 @@ class TestConversions:
 
         (
             GribReader(f"{resource}{os.sep}gep01.t00z.pgrb2a.0p50.f003")
-            .withStations(stations)
+            .withLocations(locations)
             .withConversions(conversions)
         )
 
@@ -70,11 +70,11 @@ class TestConversions:
         from gribtoarrow import GribReader
 
         # This is the latitude / longitude of Canary wharf
-        stations = pl.DataFrame({"lat": [51.5054], "lon": [-0.027176]}).to_arrow()
+        locations = pl.DataFrame({"lat": [51.5054], "lon": [-0.027176]}).to_arrow()
 
         raw_results_reader = GribReader(
             str(resource) + "/gep01.t00z.pgrb2a.0p50.f003"
-        ).withStations(stations)
+        ).withLocations(locations)
 
         raw_df = self.get_2t_df(raw_results_reader)
 
@@ -104,7 +104,7 @@ class TestConversions:
 
         reader = (
             GribReader(f"{resource}{os.sep}gep01.t00z.pgrb2a.0p50.f003")
-            .withStations(stations)
+            .withLocations(locations)
             .withConversions(conversions)
         )
 
@@ -124,11 +124,11 @@ class TestConversions:
         from gribtoarrow import GribReader
 
         # This is the latitude / longitude of Canary wharf
-        stations = pl.DataFrame({"lat": [51.5054], "lon": [-0.027176]}).to_arrow()
+        locations = pl.DataFrame({"lat": [51.5054], "lon": [-0.027176]}).to_arrow()
 
         raw_results_reader = GribReader(
             str(resource) + "/gep01.t00z.pgrb2a.0p50.f003"
-        ).withStations(stations)
+        ).withLocations(locations)
 
         raw_df = self.get_2t_df(raw_results_reader)
 
@@ -158,7 +158,7 @@ class TestConversions:
 
         reader = (
             GribReader(str(resource) + "/gep01.t00z.pgrb2a.0p50.f003")
-            .withStations(stations)
+            .withLocations(locations)
             .withConversions(conversions)
         )
 
@@ -177,11 +177,11 @@ class TestConversions:
         from gribtoarrow import GribReader
 
         # This is the latitude / longitude of Canary wharf
-        stations = pl.DataFrame({"lat": [51.5054], "lon": [-0.027176]}).to_arrow()
+        locations = pl.DataFrame({"lat": [51.5054], "lon": [-0.027176]}).to_arrow()
 
         raw_results_reader = GribReader(
             str(resource) + "/gep01.t00z.pgrb2a.0p50.f003"
-        ).withStations(stations)
+        ).withLocations(locations)
 
         raw_df = self.get_tcc_df(raw_results_reader)
 
@@ -213,7 +213,7 @@ class TestConversions:
 
         reader = (
             GribReader(f"{resource}{os.sep}gep01.t00z.pgrb2a.0p50.f003")
-            .withStations(stations)
+            .withLocations(locations)
             .withConversions(conversions)
         )
 
@@ -232,11 +232,11 @@ class TestConversions:
         from gribtoarrow import GribReader
 
         # This is the latitude / longitude of Canary wharf
-        stations = pl.DataFrame({"lat": [51.5054], "lon": [-0.027176]}).to_arrow()
+        locations = pl.DataFrame({"lat": [51.5054], "lon": [-0.027176]}).to_arrow()
 
         raw_results_reader = GribReader(
             str(resource) + "/gep01.t00z.pgrb2a.0p50.f003"
-        ).withStations(stations)
+        ).withLocations(locations)
 
         raw_df = self.get_tcc_df(raw_results_reader)
 
@@ -268,7 +268,7 @@ class TestConversions:
 
         reader = (
             GribReader(str(resource) + "/gep01.t00z.pgrb2a.0p50.f003")
-            .withStations(stations)
+            .withLocations(locations)
             .withConversions(conversions)
         )
 

@@ -29,15 +29,17 @@ public:
 
     GribReader(string filepath);
 
-    GribReader withStations(std::shared_ptr<arrow::Table> stations) ;
-    GribReader withConversions(std::shared_ptr<arrow::Table> conversions) ;
+    GribReader withLocations(std::shared_ptr<arrow::Table> locations);
+    GribReader withLocations(std::string path);
+    GribReader withConversions(std::shared_ptr<arrow::Table> conversions);
+    // GribReader withConversions(std::string path);
 
     Iterator begin();
     Iterator end();
 
     //TODO Refactor this to use optional
-    bool hasStations();
-    std::shared_ptr<arrow::Table> getStations(std::unique_ptr<GridArea>& area);
+    bool hasLocations();
+    std::shared_ptr<arrow::Table> getLocations(std::unique_ptr<GridArea>& area);
 
     std::optional<std::function<arrow::Result<std::shared_ptr<arrow::Array>>(std::shared_ptr<arrow::Array>)>> getConversions(long parameterId);
 
@@ -47,12 +49,14 @@ public:
     private:
         string filepath;
         int err             = 0;
-        std::shared_ptr<arrow::Table> shared_stations;
+        std::shared_ptr<arrow::Table> shared_locations;
         arrow::Table*       conversions = NULLPTR;
-        std::unordered_map<GridArea, std::shared_ptr<arrow::Table>> stations_in_area;
+        std::unordered_map<GridArea, std::shared_ptr<arrow::Table>> locations_in_area;
         std::unordered_map<GridArea, GribLocationData*> location_cache;
         std::unordered_map<int64_t, Converter*> conversion_funcs;
         GribMessage*        m_endMessage;
+        std::shared_ptr<arrow::Table> getTableFromCsv(std::string path);
+
 
 };
 #endif /*GRIB_READER_H_INCLUDED*/

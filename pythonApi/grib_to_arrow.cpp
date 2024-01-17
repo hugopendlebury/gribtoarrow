@@ -33,7 +33,7 @@ PYBIND11_MODULE(gribtoarrow, m)
             ----------
             filepath (str): A string containing the full path of the grib file                  
         )EOL") // constructor
-        .def("withStations", &GribReader::withStations, pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
+        .def("withLocations", py::overload_cast<std::shared_ptr<arrow::Table>>(&GribReader::withLocations), pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
             Adds locations which will be filtered in each message. 
 
             Parameters
@@ -42,7 +42,20 @@ PYBIND11_MODULE(gribtoarrow, m)
 
             The grib will be filtered by any of the coordinated given by lat and lon which are within the grid of 
             the underlying message.
-            Any additional columns passed in the table will be passed through in the results when  getDataWithStations
+            Any additional columns passed in the table will be passed through in the results when  getDataWithLocations
+            is called on the message. e.g. if you passed a table with the columns "LocationName, Country, lat, lon" then 
+            the fields of LocationName and Country would also be present in the results of the message.                 
+        )EOL")
+        .def("withLocations", py::overload_cast<std::string>(&GribReader::withLocations), pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
+            Adds locations which will be filtered in each message. 
+
+            Parameters
+            ----------
+            path (string): Path to a csv containing minimum two columns called lat and lon
+
+            The grib will be filtered by any of the coordinated given by lat and lon which are within the grid of 
+            the underlying message.
+            Any additional columns passed in the table will be passed through in the results when  getDataWithLocations
             is called on the message. e.g. if you passed a table with the columns "LocationName, Country, lat, lon" then 
             the fields of LocationName and Country would also be present in the results of the message.                 
         )EOL") 
@@ -102,6 +115,9 @@ PYBIND11_MODULE(gribtoarrow, m)
             Gets the date of the message as a string 
             If you don't want to apply any conversion then use  getChronoDate which will return a datetime object              
         )EOL") 
+        .def("getDataType", &GribMessage::getDataType, pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
+            Gets the dataType of the message as a string             
+        )EOL") 
         .def("getTime", &GribMessage::getTime, pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
             Gets the time of the message as a string   
             If you don't want to apply any conversion then use  getChronoDate which will return a datetime object                 
@@ -140,7 +156,7 @@ PYBIND11_MODULE(gribtoarrow, m)
 
             Return 3 fields the value and the latitude and longitude or the value               
         )EOL") 
-        .def("getDataWithStations", &GribMessage::getDataWithStations, pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
+        .def("getDataWithLocations", &GribMessage::getDataWithLocations, pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
             Return the values constrained by the locations specified in table to restrict by when passed in the reader              
         )EOL") 
         .def("iScansNegatively", &GribMessage::iScansNegatively, pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
@@ -158,7 +174,7 @@ PYBIND11_MODULE(gribtoarrow, m)
             There are two methods available to access the data:
 
             getData() - Will return all the data present in the values array for the message even if station were defined in the reader
-            getDataWithStations() - Restricts the results which are within the bounds of the coordinates of the message and the stations
+            getDataWithLocations() - Restricts the results which are within the bounds of the coordinates of the message and the stations
                                     defined in the reader class
         )EOL";
         ;

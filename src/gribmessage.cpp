@@ -91,6 +91,10 @@ using namespace std;
         return getStringParameter("date");
     }
 
+    string GribMessage::getDataType() {
+        return getStringParameter("dataType");
+    }
+
     chrono::system_clock::time_point GribMessage::getChronoDate() {
         tm tm = {};
         string date = to_string(getDateNumeric());
@@ -295,12 +299,12 @@ using namespace std;
             return cache_results.value();
         } 
         else {
-            auto stations_shared = _reader->getStations(gridArea);
-            auto stations = stations_shared.get();
+            auto locations_shared = _reader->getLocations(gridArea);
+            auto locations = locations_shared.get();
             //Ok we have an arrow table - get the pointers
-            auto lats = stations->GetColumnByName("lat");
+            auto lats = locations->GetColumnByName("lat");
             auto lats_vector = colToVector(lats);
-            auto lons = stations->GetColumnByName("lon");
+            auto lons = locations->GetColumnByName("lon");
             auto lons_vector = colToVector(lons);
 
             double* inlats = &lats_vector[0];
@@ -360,7 +364,7 @@ using namespace std;
                                                     distanceArray,
                                                     outlatsArray,
                                                     outlonsArray,
-                                                    stations_shared.get()->CombineChunksToBatch().ValueOrDie());
+                                                    locations_shared.get()->CombineChunksToBatch().ValueOrDie());
 
             auto result = _reader->addLocationDataToCache(gridArea, cache_data);
 
@@ -372,9 +376,9 @@ using namespace std;
     }
 
 
-   std::shared_ptr<arrow::Table> GribMessage::getDataWithStations() {
+   std::shared_ptr<arrow::Table> GribMessage::getDataWithLocations() {
 
-        if (_reader->hasStations()) {
+        if (_reader->hasLocations()) {
 
             auto gridArea = getGridArea();
 

@@ -14,6 +14,7 @@
 #include <arrow/compute/api_scalar.h>
 #include <arrow/dataset/file_ipc.h>
 #include <arrow/compute/expression.h>
+#include <arrow/csv/api.h>
 #include <iostream>
 #include "arrowutils.hpp"
 #include "caster.hpp"
@@ -43,10 +44,16 @@ GribReader::GribReader(string filepath) : filepath(filepath) {
     }
 };
 
-GribReader GribReader::withStations(std::shared_ptr<arrow::Table> stations) {
+GribReader GribReader::withLocations(std::shared_ptr<arrow::Table> locations) {
     //TODO - add some validation
     //the table should contain 2 columns "lat" and "lon"
-    this->shared_stations = stations;
+    this->shared_locations = locations;
+    return *this;
+}
+
+GribReader GribReader::withLocations(std::string path){
+    std::shared_ptr<arrow::Table> locations = getTableFromCsv(path);
+    this->shared_locations = locations;
     return *this;
 }
 
@@ -164,11 +171,11 @@ GribLocationData* GribReader::addLocationDataToCache(std::unique_ptr<GridArea>& 
 
 }
 
-std::shared_ptr<arrow::Table> GribReader::getStations(std::unique_ptr<GridArea>& area) {
+std::shared_ptr<arrow::Table> GribReader::getLocations(std::unique_ptr<GridArea>& area) {
 
     auto ga = *area.get();
 
-    if (auto search = stations_in_area.find(ga); search != stations_in_area.end()) {
+    if (auto search = locations_in_area.find(ga); search != locations_in_area.end()) {
             std::cout << "Found area" << std::endl;
     }
     else {
@@ -196,7 +203,7 @@ std::shared_ptr<arrow::Table> GribReader::getStations(std::unique_ptr<GridArea>&
 
             // Wrap the Table in a Dataset so we can use a Scanner
             std::shared_ptr<arrow::dataset::Dataset> dataset =
-                    std::make_shared<arrow::dataset::InMemoryDataset>(shared_stations);
+                    std::make_shared<arrow::dataset::InMemoryDataset>(shared_locations);
 
             auto options = std::make_shared<arrow::dataset::ScanOptions>();
             options->filter = filterCondition;
@@ -210,19 +217,31 @@ std::shared_ptr<arrow::Table> GribReader::getStations(std::unique_ptr<GridArea>&
                 cout << "Successfully filtered location table" << endl;
                 auto filteredResults = result.ValueOrDie();
                 cout << "Filtered table has "<< filteredResults.get()->num_rows() << " rows" << endl;
-                stations_in_area.emplace(std::make_pair(ga, filteredResults));
-                std::cout << "Added stations to cache\n";
+                locations_in_area.emplace(std::make_pair(ga, filteredResults));
+                std::cout << "Added locations to cache\n";
             } else {
                 cout << "OH NO" << endl;
             }
             
     }
 
-    auto required_stations = stations_in_area.find(ga);
-    auto matched =  stations_in_area[ga];
+    auto required_locations = locations_in_area.find(ga);
+    auto matched =  locations_in_area[ga];
     return matched;
 }
 
-bool GribReader::hasStations() {
-    return shared_stations.use_count() > 0;
+bool GribReader::hasLocations() {
+    return shared_locations.use_count() > 0;
+}
+
+std::shared_ptr<arrow::Table> GribReader::getTableFromCsv(std::string path){
+    std::shared_ptr<arrow::io::ReadableFile> infile = arrow::io::ReadableFile::Open(path).ValueOrDie();
+    auto csv_reader =
+        arrow::csv::TableReader::Make(
+            arrow::io::default_io_context(), infile, arrow::csv::ReadOptions::Defaults(),
+            arrow::csv::ParseOptions::Defaults(), arrow::csv::ConvertOptions::Defaults()).ValueOrDie();
+    
+    std::shared_ptr<arrow::Table> table = csv_reader->Read().ValueOrDie();
+
+    return table;
 }

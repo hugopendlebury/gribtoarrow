@@ -31,4 +31,5 @@ class TestFilterMessageId:
         assert 2 == message.getEditionNumber()
         assert message.iScansNegatively() is False
         assert message.jScansPositively() is False
+        assert message.getDataType() == "pf"
 
