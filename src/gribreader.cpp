@@ -56,7 +56,7 @@ GribReader GribReader::withLocations(std::string path){
     //Reads a CSV  with the location data and enriches it with a row_number / surrogate_key
     //TODO add validation of the column names
 
-    std::shared_ptr<arrow::Table> locations = getTableFromCsv(path);
+    std::shared_ptr<arrow::Table> locations = getTableFromCsv(path, arrow::csv::ConvertOptions::Defaults());
 
     //Append an additional column to the table called surrogate key
     auto numberOfRows = locations.get()->num_rows();
@@ -86,43 +86,21 @@ enum conversionDataTypes {
 GribReader GribReader::withConversions(std::string conversionsPath) {
     cout << "Reading conversions CSV" << endl;
     //TODO add validation of the column names
-    std::shared_ptr<arrow::Table> conversions = getTableFromCsv(conversionsPath);
 
-    std::unordered_map<std::string, std::string> requiredFields;
-    requiredFields.emplace(make_pair("parameterId", "int64" ));
-    requiredFields.emplace(make_pair("addition_value", "double" ));
-    requiredFields.emplace(make_pair("subtraction_value", "double" ));
-    requiredFields.emplace(make_pair("multiplication_value", "double" ));
-    requiredFields.emplace(make_pair("division_value", "double" ));
-    requiredFields.emplace(make_pair("ceiling_value", "double" ));
+    std::unordered_map<std::string, std::shared_ptr<arrow::DataType>> fieldTypes;
+    fieldTypes.emplace(make_pair("parameterId", arrow::int64()));
+    fieldTypes.emplace(make_pair("addition_value", arrow::float64()));
+    fieldTypes.emplace(make_pair("subtraction_value", arrow::float64()));
+    fieldTypes.emplace(make_pair("multiplication_value", arrow::float64()));
+    fieldTypes.emplace(make_pair("division_value", arrow::float64()));
+    fieldTypes.emplace(make_pair("ceiling_value", arrow::float64()));
 
-    auto conversionsCSVTable = conversions.get();
 
-    int colIndex = 0;
-    for (auto field : conversionsCSVTable->fields()) {
-        auto colName = field->name();
-        auto it = requiredFields.find(colName);
-        if(it == requiredFields.end()){
-            //Column not found should let python know
-            std::cout << "Column " << colName << " was not found in CSV" << std::endl;
-            //TODO
-            //We should throw an exceptions here
+    auto convertOptions = arrow::csv::ConvertOptions::Defaults();
+    convertOptions.column_types = fieldTypes;
 
-        } else {
-            std::cout << "Column " << colName << " was found in CSV" << std::endl;
-            auto required_type = it->second;
-            auto type = field.get()->type();
-            
-            //Surely there is an emum or cleaner way ?
-            if (type.get()->name() != required_type) {
-                std::cout << "type of column " << colName <<" does not match expected type recieved type  " << type->name() << std::endl;
-                
-            }
-        }
-        ++colIndex;
-    }
-
-    //withConversions(conversions);
+    std::shared_ptr<arrow::Table> conversions = getTableFromCsv(conversionsPath, convertOptions);
+    withConversions(conversions);
     return *this;
 }
 
@@ -296,12 +274,15 @@ bool GribReader::hasLocations() {
     return shared_locations.use_count() > 0;
 }
 
-std::shared_ptr<arrow::Table> GribReader::getTableFromCsv(std::string path){
+std::shared_ptr<arrow::Table> GribReader::getTableFromCsv(std::string path, arrow::csv::ConvertOptions convertOptions){
     std::shared_ptr<arrow::io::ReadableFile> infile = arrow::io::ReadableFile::Open(path).ValueOrDie();
+
+    
+
     auto csv_reader =
         arrow::csv::TableReader::Make(
             arrow::io::default_io_context(), infile, arrow::csv::ReadOptions::Defaults(),
-            arrow::csv::ParseOptions::Defaults(), arrow::csv::ConvertOptions::Defaults()).ValueOrDie();
+            arrow::csv::ParseOptions::Defaults(), convertOptions).ValueOrDie();
     
     std::shared_ptr<arrow::Table> table = csv_reader->Read().ValueOrDie();
 

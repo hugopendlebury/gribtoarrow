@@ -5,6 +5,7 @@
 #include <memory>
 #include <utility>
 #include <arrow/api.h>
+#include <arrow/csv/api.h>
 #include <arrow/python/pyarrow.h>
 #include "gridarea.hpp"
 #include "gribmessageiterator.hpp"
@@ -55,7 +56,7 @@ public:
         std::unordered_map<GridArea, GribLocationData*> location_cache;
         std::unordered_map<int64_t, Converter*> conversion_funcs;
         GribMessage*        m_endMessage;
-        std::shared_ptr<arrow::Table> getTableFromCsv(std::string path);
+        std::shared_ptr<arrow::Table> getTableFromCsv(std::string path, arrow::csv::ConvertOptions convertOptions);
         arrow::Result<std::shared_ptr<arrow::Array>> createSurrogateKeyCol(long numberOfRows);
 
 

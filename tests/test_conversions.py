@@ -276,7 +276,7 @@ class TestConversions:
 
         assert converted_df["value"].to_list()[0] == 1
 
-    @pytest.mark.skip(reason="Complete validation")
+    pytest.mark.skip(reason="Complete validation")
     def test_csv_multiplication(self, resource):
         # In this test we will read a Grib file which was downloaded from
         # NOAA.
@@ -311,12 +311,12 @@ class TestConversions:
                     "division_value": [None],
                     "ceiling_value": [None],
                 }
-            ).write_csv(str(resource) + "test_conversions.csv")
+            ).write_csv(str(resource) + "/test_conversions.csv")
 
         reader = (
             GribReader(str(resource) + "/gep01.t00z.pgrb2a.0p50.f003")
             .withLocations(locations)
-            .withConversions(str(resource) + "test_conversions.csv")
+            .withConversions(str(resource) + "/test_conversions.csv")
         )
 
         converted_df = self.get_tcc_df(reader)

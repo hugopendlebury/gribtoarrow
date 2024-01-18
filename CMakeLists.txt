@@ -6,6 +6,9 @@ set (CMAKE_CXX_STANDARD 17)
 
 find_package(Arrow REQUIRED)
 
+message(STATUS "Arrow version: ${ARROW_VERSION}")
+message(STATUS "Arrow SO version: ${ARROW_FULL_SO_VERSION}")
+
 add_subdirectory(pybind11)
 
 INCLUDE_DIRECTORIES(/usr/local/include;
