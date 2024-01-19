@@ -20,15 +20,13 @@ LINK_DIRECTORIES(/usr/local/lib;/Users/hugo/.pyenv/versions/3.12.0/lib
 /Users/hugo/Development/python/venv/lib/python3.12/site-packages/pyarrow/
 /opt/homebrew/Cellar/apache-arrow/14.0.1_2/lib)
 
+file(GLOB_RECURSE sources      src/*.cpp pythonApi/*.cpp)
+
+message(STATUS "Sources: ${sources}")
+
 #Note the order is important here
 #pybind11_add_moudle should be before target_link_libraries
-pybind11_add_module(gribtoarrow "./pythonApi/grib_to_arrow.cpp" 
-                            "./src/gribreader.cpp" 
-                            "./src/gribmessage.cpp" 
-                            "./src/gribmessageiterator.cpp"
-                            "./src/griblocationdata.cpp"
-                            "./src/arrowutils.cpp"
-                            "./src/converter.cpp")
+pybind11_add_module(gribtoarrow ${sources})
 
 
 #This must be after pybind11_add_module
