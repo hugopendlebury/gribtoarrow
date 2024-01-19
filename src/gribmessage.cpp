@@ -196,9 +196,9 @@ using namespace std;
         
         CODES_CHECK(codes_grib_get_data(h, lats, lons, values), 0);
 
-        auto valuesArray = fieldToArrow(numberOfPoints, values, false);
-        auto latsArray = fieldToArrow(numberOfPoints, lats, false);
-        auto lonsArray = fieldToArrow(numberOfPoints, lons, false);
+        auto valuesArray = doubleFieldToArrow(numberOfPoints, values, false);
+        auto latsArray = doubleFieldToArrow(numberOfPoints, lats, false);
+        auto lonsArray = doubleFieldToArrow(numberOfPoints, lons, false);
 
         std::shared_ptr<arrow::Field> field_lats, field_lons, field_values;
         std::shared_ptr<arrow::Schema> schema;
@@ -350,12 +350,12 @@ using namespace std;
 
             //std::cout << "status of grib_find_nearest_multiple is " << status << std::endl;
 
-            auto latsArray = fieldToArrow(numberOfPoints, inlats, false);
-            auto lonsArray = fieldToArrow(numberOfPoints, inlons, false);
-            auto outvaluesArray = fieldToArrow(numberOfPoints, outvalues, true);
-            auto distanceArray = fieldToArrow(numberOfPoints, distances, false);
-            auto outlatsArray = fieldToArrow(numberOfPoints, outlats, false);
-            auto outlonsArray = fieldToArrow(numberOfPoints, outlons, false);
+            auto latsArray = doubleFieldToArrow(numberOfPoints, inlats, false);
+            auto lonsArray = doubleFieldToArrow(numberOfPoints, inlons, false);
+            auto outvaluesArray = doubleFieldToArrow(numberOfPoints, outvalues, true);
+            auto distanceArray = doubleFieldToArrow(numberOfPoints, distances, false);
+            auto outlatsArray = doubleFieldToArrow(numberOfPoints, outlats, false);
+            auto outlonsArray = doubleFieldToArrow(numberOfPoints, outlons, false);
 
             auto cache_data = new GribLocationData(numberOfPoints, 
                                                     indexes,
@@ -395,9 +395,9 @@ using namespace std;
 
             codes_get_double_elements(h, "values", indexes, numberOfPoints, doubleValues);
 
-            auto valuesArray = fieldToArrow(numberOfPoints, doubleValues, true);
+            auto valuesArray = doubleFieldToArrow(numberOfPoints, doubleValues, true);
 
-            //apply any conversion
+            //apply any conversions
             auto parameterId = getParameterId();
             auto conversionFunc = _reader->getConversions(parameterId);
 
@@ -416,7 +416,9 @@ using namespace std;
                 auto field = f.get();
                 fields.push_back(arrow::field(field->name(), field->type()));
             }
-            
+        
+            fields.push_back(arrow::field("parameterId", arrow::int32()));
+            fields.push_back(arrow::field("modelNo", arrow::uint8()));
             //Now add the data from the lookups and grib data
             fields.push_back(arrow::field("distance", arrow::float64()));
             fields.push_back(arrow::field("nearestlatitude", arrow::float64()));
@@ -431,7 +433,9 @@ using namespace std;
             for (auto column : location_data->tableData.get()->columns()) {
                 resultsArray.push_back(column);
             }
-            
+
+            resultsArray.push_back(fieldToArrow(numberOfPoints, (u_int32_t)parameterId).ValueOrDie());
+            resultsArray.push_back(fieldToArrow(numberOfPoints, (u_int8_t) getModelNumber()).ValueOrDie());
             resultsArray.push_back(location_data->distanceArray.ValueOrDie());
             resultsArray.push_back(location_data->outlatsArray.ValueOrDie());
             resultsArray.push_back(location_data->outlonsArray.ValueOrDie());
@@ -440,6 +444,7 @@ using namespace std;
             //auto rbatch = arrow::RecordBatch::Make(schema, numberOfPoints, resultsArrayNew);
 
             auto table = arrow::Table::Make(schema, resultsArray, numberOfPoints);
+
 
             //std::cout << rbatch->ToString();
 

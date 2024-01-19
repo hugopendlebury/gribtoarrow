@@ -5,6 +5,26 @@ import sys
 import pyarrow
 
 class TestLocations:
+
+    def test_default_fields_present(self, resource):
+        from gribtoarrow import GribReader
+
+        stations = pl.DataFrame(
+            {"lat": [51.5054, 53.4808], "lon": [-0.027176, 2.2426]}
+        ).to_arrow()
+    
+        reader = GribReader(
+            str(resource) + "/gep01.t00z.pgrb2a.0p50.f003"
+        ).withLocations(stations)
+
+        df = pl.concat(
+            pl.from_arrow(message.getDataWithLocations()) for message in reader
+        )
+
+        assert 'parameterId' in df.columns
+        assert 'modelNo' in df.columns
+
+
     def test_find_nearest(self, resource):
         from gribtoarrow import GribReader
 

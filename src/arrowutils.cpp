@@ -80,7 +80,7 @@ arrow::Result<std::vector<data_row>> ColumnarTableToVector(
 }
 
 
-arrow::Result<std::shared_ptr<arrow::Array>> fieldToArrow(long numberOfPoints, 
+arrow::Result<std::shared_ptr<arrow::Array>> doubleFieldToArrow(long numberOfPoints, 
             double *fieldValues, 
             bool replaceMissingWithNull) {
 
@@ -103,6 +103,64 @@ arrow::Result<std::shared_ptr<arrow::Array>> fieldToArrow(long numberOfPoints,
     std::shared_ptr<arrow::Array> arrayValues;
     ARROW_ASSIGN_OR_RAISE(arrayValues, valuesBuilder.Finish());
     return arrayValues;
+
+//return arrow::Status::OK();
+}  
+
+
+arrow::Result<std::shared_ptr<arrow::Array>> fieldToArrow(long numberOfPoints, long value ) {
+
+
+    arrow::UInt64Builder valuesBuilder;
+
+    std::vector<u_int64_t> row_ids;
+    for(auto i =0 ; i <  numberOfPoints; ++i) {
+        row_ids.emplace_back(value);
+    }
+
+    ARROW_RETURN_NOT_OK(valuesBuilder.AppendValues(row_ids));
+    std::shared_ptr<arrow::Array> arrayValues;
+    ARROW_ASSIGN_OR_RAISE(arrayValues,valuesBuilder.Finish());
+    return arrayValues;
+
+
+//return arrow::Status::OK();
+}  
+
+arrow::Result<std::shared_ptr<arrow::Array>> fieldToArrow(long numberOfPoints, u_int32_t value ) {
+
+
+    arrow::UInt32Builder valuesBuilder;
+
+    std::vector<u_int32_t> row_ids;
+    for(auto i =0 ; i <  numberOfPoints; ++i) {
+        row_ids.emplace_back(value);
+    }
+
+    ARROW_RETURN_NOT_OK(valuesBuilder.AppendValues(row_ids));
+    std::shared_ptr<arrow::Array> arrayValues;
+    ARROW_ASSIGN_OR_RAISE(arrayValues,valuesBuilder.Finish());
+    return arrayValues;
+
+
+//return arrow::Status::OK();
+}  
+
+arrow::Result<std::shared_ptr<arrow::Array>> fieldToArrow(long numberOfPoints, uint8_t value ) {
+
+
+    arrow::UInt8Builder valuesBuilder;
+
+    std::vector<uint8_t> row_ids;
+    for(auto i =0 ; i <  numberOfPoints; ++i) {
+        row_ids.emplace_back(value);
+    }
+
+    ARROW_RETURN_NOT_OK(valuesBuilder.AppendValues(row_ids));
+    std::shared_ptr<arrow::Array> arrayValues;
+    ARROW_ASSIGN_OR_RAISE(arrayValues,valuesBuilder.Finish());
+    return arrayValues;
+
 
 //return arrow::Status::OK();
 }  
