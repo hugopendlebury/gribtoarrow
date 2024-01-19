@@ -1,11 +1,18 @@
 #include <arrow/api.h>
 #include <arrow/result.h>
-
+#include <arrow/compute/api_scalar.h>
+#include <arrow/dataset/file_ipc.h>
+#include <arrow/compute/expression.h>
 #include <cstdint>
 #include <iomanip>
+#include <chrono>
+#include <sstream>
+#include <time.h>
 #include <iostream>
 #include <vector>
 #include "arrowutils.hpp"
+
+namespace cp = arrow::compute;
 
 using arrow::DoubleBuilder;
 using arrow::Int64Builder;
@@ -113,12 +120,12 @@ arrow::Result<std::shared_ptr<arrow::Array>> fieldToArrow(long numberOfPoints, l
 
     arrow::UInt64Builder valuesBuilder;
 
-    std::vector<u_int64_t> row_ids;
+    std::vector<u_int64_t> column_values;
     for(auto i =0 ; i <  numberOfPoints; ++i) {
-        row_ids.emplace_back(value);
+        column_values.emplace_back(value);
     }
 
-    ARROW_RETURN_NOT_OK(valuesBuilder.AppendValues(row_ids));
+    ARROW_RETURN_NOT_OK(valuesBuilder.AppendValues(column_values));
     std::shared_ptr<arrow::Array> arrayValues;
     ARROW_ASSIGN_OR_RAISE(arrayValues,valuesBuilder.Finish());
     return arrayValues;
@@ -132,12 +139,12 @@ arrow::Result<std::shared_ptr<arrow::Array>> fieldToArrow(long numberOfPoints, u
 
     arrow::UInt32Builder valuesBuilder;
 
-    std::vector<u_int32_t> row_ids;
+    std::vector<u_int32_t> column_values;
     for(auto i =0 ; i <  numberOfPoints; ++i) {
-        row_ids.emplace_back(value);
+        column_values.emplace_back(value);
     }
 
-    ARROW_RETURN_NOT_OK(valuesBuilder.AppendValues(row_ids));
+    ARROW_RETURN_NOT_OK(valuesBuilder.AppendValues(column_values));
     std::shared_ptr<arrow::Array> arrayValues;
     ARROW_ASSIGN_OR_RAISE(arrayValues,valuesBuilder.Finish());
     return arrayValues;
@@ -151,12 +158,12 @@ arrow::Result<std::shared_ptr<arrow::Array>> fieldToArrow(long numberOfPoints, u
 
     arrow::UInt8Builder valuesBuilder;
 
-    std::vector<uint8_t> row_ids;
+    std::vector<uint8_t> column_values;
     for(auto i =0 ; i <  numberOfPoints; ++i) {
-        row_ids.emplace_back(value);
+        column_values.emplace_back(value);
     }
 
-    ARROW_RETURN_NOT_OK(valuesBuilder.AppendValues(row_ids));
+    ARROW_RETURN_NOT_OK(valuesBuilder.AppendValues(column_values));
     std::shared_ptr<arrow::Array> arrayValues;
     ARROW_ASSIGN_OR_RAISE(arrayValues,valuesBuilder.Finish());
     return arrayValues;
@@ -164,3 +171,23 @@ arrow::Result<std::shared_ptr<arrow::Array>> fieldToArrow(long numberOfPoints, u
 
 //return arrow::Status::OK();
 }  
+
+arrow::Result<std::shared_ptr<arrow::Array>> fieldToArrow(long numberOfPoints, std::chrono::system_clock::time_point  value ) {
+
+    auto timeSinceEpoch = (int64_t) std::chrono::duration_cast<std::chrono::hours>(value.time_since_epoch()).count() ;
+
+    std::vector<int64_t> column_values;
+    for(auto i =0 ; i <  numberOfPoints; ++i) {
+        column_values.emplace_back(timeSinceEpoch);
+    }
+
+    auto timeType = arrow::timestamp(arrow::TimeUnit::SECOND);
+    arrow::TimestampBuilder valuesBuilder(timeType, arrow::default_memory_pool());
+    
+    ARROW_RETURN_NOT_OK(valuesBuilder.AppendValues(column_values));
+    std::shared_ptr<arrow::Array> arrayValues;
+    ARROW_ASSIGN_OR_RAISE(arrayValues,valuesBuilder.Finish());
+    return arrayValues;
+
+//return arrow::Status::OK();
+}

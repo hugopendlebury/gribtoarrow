@@ -23,5 +23,6 @@ arrow::Result<std::shared_ptr<arrow::Array>> doubleFieldToArrow(long numberOfPoi
 arrow::Result<std::shared_ptr<arrow::Array>> fieldToArrow(long numberOfPoints, long value );
 arrow::Result<std::shared_ptr<arrow::Array>> fieldToArrow(long numberOfPoints, u_int32_t value ) ;
 arrow::Result<std::shared_ptr<arrow::Array>> fieldToArrow(long numberOfPoints, uint8_t value );
+arrow::Result<std::shared_ptr<arrow::Array>> fieldToArrow(long numberOfPoints, std::chrono::system_clock::time_point  value ) ;
 
 #endif /* ARROW_UTILS_INCLUDED */

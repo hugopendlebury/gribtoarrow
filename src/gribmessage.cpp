@@ -419,6 +419,8 @@ using namespace std;
         
             fields.push_back(arrow::field("parameterId", arrow::int32()));
             fields.push_back(arrow::field("modelNo", arrow::uint8()));
+            fields.push_back(arrow::field("forecast_date", arrow::timestamp(arrow::TimeUnit::SECOND)));
+            fields.push_back(arrow::field("datetime", arrow::timestamp(arrow::TimeUnit::SECOND)));
             //Now add the data from the lookups and grib data
             fields.push_back(arrow::field("distance", arrow::float64()));
             fields.push_back(arrow::field("nearestlatitude", arrow::float64()));
@@ -436,6 +438,8 @@ using namespace std;
 
             resultsArray.push_back(fieldToArrow(numberOfPoints, (u_int32_t)parameterId).ValueOrDie());
             resultsArray.push_back(fieldToArrow(numberOfPoints, (u_int8_t) getModelNumber()).ValueOrDie());
+            resultsArray.push_back(fieldToArrow(numberOfPoints, getChronoDate()).ValueOrDie());
+            resultsArray.push_back(fieldToArrow(numberOfPoints, getObsDate()).ValueOrDie());
             resultsArray.push_back(location_data->distanceArray.ValueOrDie());
             resultsArray.push_back(location_data->outlatsArray.ValueOrDie());
             resultsArray.push_back(location_data->outlonsArray.ValueOrDie());

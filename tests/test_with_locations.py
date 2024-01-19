@@ -23,6 +23,15 @@ class TestLocations:
 
         assert 'parameterId' in df.columns
         assert 'modelNo' in df.columns
+        assert 'lat' in df.columns
+        assert 'lon' in df.columns
+        assert 'distance' in df.columns
+        assert 'nearestlatitude' in df.columns
+        assert 'nearestlongitude' in df.columns
+        assert 'value' in df.columns
+        assert 'datetime' in df.columns
+        assert 'forecast_date' in df.columns
+
 
 
     def test_find_nearest(self, resource):
