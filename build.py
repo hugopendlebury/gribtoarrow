@@ -126,7 +126,10 @@ def buildhook(func):
         eccodes_libs = [f for f in get_eccodes_lib_path_as_path().glob("*") if str(f).endswith(lib_extension)]  
         build_dir = get_build_dir()
         build_lib_path = list(get_build_dir().glob("lib*"))[0]
-        eccodes_wheel_paths = [build_lib_path / "eccodes", build_lib_path / "lib"]
+        build_lib_grib_arrow_path = build_lib_path  / "gribtoarrow"
+        for extension in build_lib_path.glob(f"*.*"):
+            shutil.copy(extension, build_lib_grib_arrow_path)
+        eccodes_wheel_paths = [build_lib_grib_arrow_path  / "eccodes", build_lib_grib_arrow_path  / "lib"]
         mk_wheel_dirs(eccodes_wheel_paths)
         eccodes_main_path, eccodes_memfs_path = eccodes_wheel_paths
         for f in eccodes_libs: 

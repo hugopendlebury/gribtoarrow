@@ -8,6 +8,8 @@ find_package(Arrow REQUIRED)
 
 message(STATUS "Arrow version: ${ARROW_VERSION}")
 message(STATUS "Arrow SO version: ${ARROW_FULL_SO_VERSION}")
+message(STATUS "Arrow Libraries: ${ARROW_LIB_DIR}")
+message(STATUS "Arrow Include dir: ${ARROW_INCLUDE_DIR}")
 
 add_subdirectory(pybind11)
 
