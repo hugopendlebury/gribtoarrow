@@ -174,14 +174,14 @@ arrow::Result<std::shared_ptr<arrow::Array>> fieldToArrow(long numberOfPoints, u
 
 arrow::Result<std::shared_ptr<arrow::Array>> fieldToArrow(long numberOfPoints, std::chrono::system_clock::time_point  value ) {
 
-    auto timeSinceEpoch = (int64_t) std::chrono::duration_cast<std::chrono::hours>(value.time_since_epoch()).count() ;
+    auto timeSinceEpoch = (int64_t) std::chrono::duration_cast<std::chrono::microseconds>(value.time_since_epoch()).count() ;
 
     std::vector<int64_t> column_values;
     for(auto i =0 ; i <  numberOfPoints; ++i) {
         column_values.emplace_back(timeSinceEpoch);
     }
 
-    auto timeType = arrow::timestamp(arrow::TimeUnit::SECOND);
+    auto timeType = arrow::timestamp(arrow::TimeUnit::MICRO);
     arrow::TimestampBuilder valuesBuilder(timeType, arrow::default_memory_pool());
     
     ARROW_RETURN_NOT_OK(valuesBuilder.AppendValues(column_values));

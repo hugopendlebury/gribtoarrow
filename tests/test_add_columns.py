@@ -43,3 +43,33 @@ class TestColumns():
         assert all(x == 3 for x in df_first_row["step"].to_list())
         assert all(x == 156 for x in df_first_row["parameterID"].to_list())
         assert all(x == 1 for x in df_first_row["perturbationNumber"].to_list())
+
+    def test_auto_columns(self, resource):
+        """The columns parameterId, modelNo, forecast_date, datetime are added to the results 
+        when getDataWithLocations is called. Ensure that the automatically added fields are the same
+        as the values obtained when calling the function directly on the message
+        """
+
+        from gribtoarrow import GribReader
+
+        stations = pl.DataFrame(
+            {"lat": [51.5054, 53.4808], "lon": [-0.027176, 2.2426]}
+        ).to_arrow()
+
+        reader = GribReader(str(resource) + "/gep01.t00z.pgrb2a.0p50.f003").withLocations(stations)
+        data = []
+        for message in reader:
+            df = pl.from_arrow(message.getDataWithLocations()).with_columns(
+                    parameterIdMsg = pl.lit(message.getParameterId()),
+                    modelNoMsg = pl.lit(message.getModelNumber()),
+                    forecast_dateMsg = pl.lit(message.getChronoDate()),
+                    datetimeMsg = pl.lit(message.getObsDate()),    
+            ).filter(
+                        (pl.col("parameterId") != pl.col("parameterIdMsg")) |
+                        (pl.col("modelNo") != pl.col("modelNoMsg")) |
+                        (pl.col("forecast_date") != pl.col("forecast_dateMsg")) |
+                        (pl.col("datetime") != pl.col("datetimeMsg")) 
+                    )
+            data.append(df)
+        df = pl.concat(data)
+        assert len(df) == 0

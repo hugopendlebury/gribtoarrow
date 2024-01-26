@@ -421,7 +421,7 @@ using namespace std;
             fields.push_back(arrow::field("modelNo", arrow::uint8()));
             fields.push_back(arrow::field("forecast_date", arrow::timestamp(arrow::TimeUnit::SECOND)));
             fields.push_back(arrow::field("datetime", arrow::timestamp(arrow::TimeUnit::SECOND)));
-            //Now add the data from the lookups and grib data
+            //Now add the data from the lookups and grib data.
             fields.push_back(arrow::field("distance", arrow::float64()));
             fields.push_back(arrow::field("nearestlatitude", arrow::float64()));
             fields.push_back(arrow::field("nearestlongitude", arrow::float64()));
