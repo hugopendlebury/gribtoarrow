@@ -35,7 +35,7 @@ gribtoarrow (Class)
 
 gribmessage (Class)
     This is an object which will be returned by each iteration of the iterator.
-    This exposes methods such as getData(), getDataWithStations() and many methods to get attribute values such as paramId, shortName etc..
+    This exposes methods such as getData(), getDataWithLocations() and many methods to get attribute values such as paramId, shortName etc..
 
 
 A sample usage of the Library in python is given below. In this code a config CSV is read with polars.
@@ -46,22 +46,24 @@ Next a simple list comprehension is used to extract all the details from every m
 As can been seen a lot of work was accomplished in just 14 lines of python. In addition to the low amount of code required
 we also benefit from quick performance. 
 
-    import polars as pl
-    from gribtoarrow import GribToArrow
+```python
+import polars as pl
+from gribtoarrow import GribToArrow
 
-    stations = (
-        pl.read_csv("/Users/hugo/Development/cpp/grib_to_arrow/stations.csv", has_header=False)
-        .with_columns([pl.col('column_7').alias('lat'),pl.col('column_8').alias('lon')]
-    ).to_arrow()
+locations = (
+    pl.read_csv("/Users/hugo/Development/cpp/grib_to_arrow/locations.csv", has_header=False)
+    .with_columns([pl.col('column_7').alias('lat'),pl.col('column_8').alias('lon')]
+).to_arrow()
 
-    reader = ( 
-        GribToArrow("/Users/hugo/Development/cpp/grib_to_arrow/big.grib")
-            .withLocations(arrow_stations)
-    )
-    data = [pl.from_arrow(message.getDataWithLocations()) for message in reader]
-    df = pl.concat(data)
-    print(f"done all data extracted {len(df)} rows from grib")
-    df.write_parquet("/Users/hugo/Development/cpp/grib_to_arrow/output.parquet")
+reader = ( 
+    GribToArrow("/Users/hugo/Development/cpp/grib_to_arrow/big.grib")
+        .withLocations(locations)
+)
+data = [pl.from_arrow(message.getDataWithLocations()) for message in reader]
+df = pl.concat(data)
+print(f"done all data extracted {len(df)} rows from grib")
+df.write_parquet("/Users/hugo/Development/cpp/grib_to_arrow/output.parquet")
+```
 
 ## Performance
 The module is fast since it operates entirely in memory. In addition it releases the GIL to allow python threading. Currently it doesn't 
@@ -78,7 +80,7 @@ The main entry point is the GribReader class, which takes a string path to a gri
 
 In addition GribReader has a fluent API which includes the following methods :-
 
-- withStations -> Pass an arrow table to this function which includes the columns "lat" and "lon" and the results will be filtered to the 
+- withLocations -> Pass an arrow table to this function which includes the columns "lat" and "lon" and the results will be filtered to the 
 nearest location based on the provided co-ordinates. e.g. You might have a grib file at 0.5 resolution for every location of earth. Logically a lot
 of those locations will be at sea, so you could use this facility and specify a list of latitutdes and longitudes to restricte the amount of results
 returned.
