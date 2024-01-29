@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, List
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 import pyarrow
 import site
@@ -41,6 +41,9 @@ def get_working_dir() -> Path:
 def get_build_dir() -> Path:
     return get_working_dir() / "build"
 
+def get_temp_path(child_path: str) -> Path:
+    return get_working_dir() / child_path
+
 def get_temp_eccodes_path() -> Path:
     return get_working_dir() / "temp_eccodes"
 
@@ -57,38 +60,73 @@ def get_eccodes_lib_path_as_path() -> Path:
 def get_eccodes_build_dir() -> Path:
     return get_temp_eccodes_path() / "build"
 
-def getEccodes() -> Path:
-    print("Downloading eccodes")
-    temp_eccodes_dir = get_temp_eccodes_path()
-    build_dir = get_eccodes_build_dir()
-    if not temp_eccodes_dir.exists():
-        temp_eccodes_dir.mkdir()
-    if not build_dir.exists():
-        build_dir.mkdir()
-    save_file = temp_eccodes_dir / "eccodes.tar.gz"
-    url = "https://confluence.ecmwf.int/download/attachments/45757960/eccodes-2.33.0-Source.tar.gz"
+def mkPaths(paths: List[Path]):
+    for path in paths:
+        if not path.exists():
+            path.mkdir()
+
+def download_extract_tar(url: str, save_file_name: Path, temp_dir: Path) -> Path :
+    print(f"Downloading from url {url}")
     responce = requests.get(url, verify=False)
     if responce.status_code == 200:
-        print("Saving eccodes")
-        with open(save_file, 'wb') as f:
+        print(f"Saving save_file_name")
+        with open(save_file_name, 'wb') as f:
             f.write(responce.content)
-            with tarfile.open(save_file) as tar:
-                print("Extracting eccodes")
-                tar.extractall(temp_eccodes_dir)
-            return temp_eccodes_dir / "eccodes-2.33.0-Source" 
+            with tarfile.open(save_file_name) as tar:
+                print("Extracting tar file")
+                tar.extractall(temp_dir)
+            extracted_dir = temp_dir / url.split("/")[-1].replace(".tar.gz","")
+            print(f"Extracted dir is {extracted_dir}")
+            return extracted_dir
 
+def getEccodes() -> Path:
+    print("Downloading eccodes")
+    temp_dir = get_temp_eccodes_path()
+    build_dir = get_eccodes_build_dir()
+    mkPaths([temp_dir, build_dir])
+    save_file = temp_dir / "eccodes.tar.gz"
+    url = "https://confluence.ecmwf.int/download/attachments/45757960/eccodes-2.33.0-Source.tar.gz"
+    return download_extract_tar(url, save_file, temp_dir)
 
-def runCmd(cmd, args=None):
+def getLibaec() -> Path:
+    print("Downloading libaec")
+    temp_dir = get_temp_path("temp_libaec")
+    build_dir = temp_dir / "build"
+    mkPaths([temp_dir, build_dir])
+    save_file = temp_dir / "libaec.tar.gz"
+    url = "https://gitlab.dkrz.de/k202009/libaec/-/archive/v1.1.2/libaec-v1.1.2.tar.gz"
+    return download_extract_tar(url, save_file, temp_dir)
+
+def runCmd(cmd, cwd:Path, args=None):
     print(f"Executing {cmd} with args {args}")
     executeCmd = [cmd] 
     if args is not None:
         executeCmd.extend(args)
     print(f"executeCmd =  {executeCmd}")
     process = subprocess.run(executeCmd, 
-            cwd=str(get_eccodes_build_dir()),
+            cwd=str(cwd),
                      stdout=subprocess.PIPE)
     
     print(f"Done with return code {process.returncode} {process.stdout}")
+
+def build_libaec():
+    cmake_path = getCMakePath()
+    libaec_path = getLibaec()
+    cmake_args = [
+        f"-DCMAKE_INSTALL_PREFIX={get_temp_path("temp_libaec")}", #install into our temp dir
+    ]
+    all_args = cmake_args
+    build_path = get_temp_path("temp_libaec") / "build"
+    all_args.extend([str(libaec_path)])
+    runCmd(cmake_path, build_path, all_args)
+    runCmd("make", build_path)
+    runCmd("make", build_path, ["install"])
+    shutil.rmtree(build_path)
+    mkPaths([build_path])
+    runCmd(cmake_path, build_path, all_args)  
+    runCmd("make", build_path)
+    runCmd("make", build_path, ["install"])
+
 
 def buildEccodes():
     cmake_path = getCMakePath()
@@ -105,10 +143,10 @@ def buildEccodes():
     ]
     all_args = cmake_args
     all_args.extend([str(eccodes_path)])
-    runCmd(cmake_path, all_args)
-    runCmd("make")
-    runCmd("ctest")
-    runCmd("make", ["install"])
+    runCmd(cmake_path, get_eccodes_build_dir(), all_args)
+    runCmd("make", get_eccodes_build_dir())
+    runCmd("ctest", get_eccodes_build_dir())
+    runCmd("make", get_eccodes_build_dir(), ["install"])
 
 def mk_wheel_dirs(paths):
     for path in paths:
@@ -132,6 +170,9 @@ def buildhook(func):
         eccodes_wheel_paths = [build_lib_grib_arrow_path  / "eccodes", build_lib_grib_arrow_path  / "lib"]
         mk_wheel_dirs(eccodes_wheel_paths)
         eccodes_main_path, eccodes_memfs_path = eccodes_wheel_paths
+        libaec_libs = [f for f in (get_temp_path("temp_libaec") / "lib").glob("*") if str(f).endswith(lib_extension)] 
+        for f in libaec_libs: 
+            shutil.copy(f, eccodes_memfs_path)
         for f in eccodes_libs: 
             shutil.copy(f, eccodes_main_path)
             if "memfs" in str(f):
@@ -174,6 +215,7 @@ def build(setup_kwargs: Dict[str, Any]) -> None:
         shutil.rmtree(build_dir)  
 
     if setup_kwargs.get("build_eccodes", True):
+        build_libaec()
         buildEccodes()
  
     #Note rpath and origin eccodes we are telling the linker to look for dependencies in ./eccodes which will be a 
