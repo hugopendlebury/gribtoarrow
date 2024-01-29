@@ -170,7 +170,7 @@ def buildhook(func):
         eccodes_wheel_paths = [build_lib_grib_arrow_path  / "eccodes", build_lib_grib_arrow_path  / "lib"]
         mk_wheel_dirs(eccodes_wheel_paths)
         eccodes_main_path, eccodes_memfs_path = eccodes_wheel_paths
-        libaec_libs = [f for f in (get_temp_path("temp_libaec") / "lib").glob("*") if str(f).endswith(lib_extension)] 
+        libaec_libs = [f for f in (get_temp_path('temp_libaec') / "lib").glob("*") if str(f).endswith(lib_extension)] 
         for f in libaec_libs: 
             shutil.copy(f, eccodes_memfs_path)
         for f in eccodes_libs: 
