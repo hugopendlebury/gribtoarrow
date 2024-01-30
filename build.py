@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union, Callable
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 import pyarrow
 import site
@@ -47,17 +47,19 @@ def get_temp_path(child_path: str) -> Path:
 def get_temp_eccodes_path() -> Path:
     return get_working_dir() / "temp_eccodes"
 
+def get_temp_libaec_path() -> Path:
+    return get_working_dir() / "temp_libaec"
+
 def get_eccodes_include_path() -> Path:
     return get_temp_eccodes_path() / "include"
 
-def get_eccodes_lib_path() -> str:
-    p = get_temp_eccodes_path() / "lib"
-    p = p if p.exists() else get_temp_eccodes_path() / "lib64"
-    return str(p)
+def get_lib_path(func: Callable, as_string: bool = False) -> Union[str, Path]:
+    temp = func() / "lib"
+    temp = temp if temp.exists else func() / "lib64"
+    return str(temp) if as_string else temp
 
-def get_eccodes_lib_path_as_path() -> Path:
-    temp =  get_temp_eccodes_path() / "lib"
-    return temp if temp.exists() else get_temp_eccodes_path() / "lib64"
+def get_eccodes_lib_path(as_string: bool = False) -> Union[str, Path]:
+    return get_lib_path(get_temp_eccodes_path, as_string)
 
 def get_eccodes_build_dir() -> Path:
     return get_temp_eccodes_path() / "build"
@@ -92,7 +94,7 @@ def getEccodes() -> Path:
 
 def getLibaec() -> Path:
     print("Downloading libaec")
-    temp_dir = get_temp_path("temp_libaec")
+    temp_dir = get_temp_libaec_path()
     build_dir = temp_dir / "build"
     mkPaths([temp_dir, build_dir])
     save_file = temp_dir / "libaec.tar.gz"
@@ -111,8 +113,14 @@ def runCmd(cmd, cwd:Path, args=None):
     
     print(f"Done with return code {process.returncode} {process.stdout}")
 
-def build_libaec():
+def make_install(build_path, args):
     cmake_path = getCMakePath()
+    runCmd(cmake_path, build_path, args)
+    runCmd("make", build_path)
+    runCmd("make", build_path, ["install"])
+
+def build_libaec():
+
     libaec_path = getLibaec()
     cmake_args = [
         f"-DCMAKE_INSTALL_PREFIX={get_temp_path('temp_libaec')}", #install into our temp dir.
@@ -120,14 +128,10 @@ def build_libaec():
     all_args = cmake_args
     build_path = get_temp_path("temp_libaec") / "build"
     all_args.extend([str(libaec_path)])
-    runCmd(cmake_path, build_path, all_args)
-    runCmd("make", build_path)
-    runCmd("make", build_path, ["install"])
+    make_install(build_path, all_args)
     shutil.rmtree(build_path)
     mkPaths([build_path])
-    runCmd(cmake_path, build_path, [str(libaec_path)])  
-    runCmd("make", build_path)
-    runCmd("make", build_path, ["install"])
+    make_install(build_path, [libaec_path])
 
 
 def buildEccodes():
@@ -162,8 +166,8 @@ def buildhook(func):
         result =  func(*args, **kwargs)
         print(f"EXTENSION WAS BUILT with result {result}")
         print("copying eccodes lib so they are bundled with the Wheel")
-        lib_extension  = 'dylib' if getSystem() == OSEnv.OSX else 'so*'
-        eccodes_libs = [f for f in get_eccodes_lib_path_as_path().glob("*") if str(f).endswith(lib_extension)]  
+        lib_extension  = '*.dylib' if getSystem() == OSEnv.OSX else '*.so*'
+        eccodes_libs = list(get_eccodes_lib_path(False).glob("*"))
         build_dir = get_build_dir()
         build_lib_path = list(get_build_dir().glob("lib*"))[0]
         build_lib_grib_arrow_path = build_lib_path  / "gribtoarrow"
@@ -172,7 +176,7 @@ def buildhook(func):
         eccodes_wheel_paths = [build_lib_grib_arrow_path  / "eccodes", build_lib_grib_arrow_path  / "lib"]
         mk_wheel_dirs(eccodes_wheel_paths)
         eccodes_main_path, eccodes_memfs_path = eccodes_wheel_paths
-        libaec_libs = [f for f in (get_temp_path('temp_libaec') / "lib").glob("*") if str(f).endswith(lib_extension)] 
+        libaec_libs = list(get_lib_path(get_temp_libaec_path).glob(lib_extension))
         for f in libaec_libs: 
             shutil.copy(f, eccodes_memfs_path)
         for f in eccodes_libs: 
