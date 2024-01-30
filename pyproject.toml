@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gribtoarrow"
-version = "0.1.9"
+version = "0.1.10"
 description = "gribtoarrow is a python module to export data in the GRIB format to Apache Arrow"
 authors = ["Hugo Pendlebury", "Lewis Wilkins"]
 readme = "README.md"
@@ -25,7 +25,7 @@ pytest = "^6.0.0"
 polars = "^0.20.2"
 
 [build-system]
-requires = ["poetry-core", "wheel", "setuptools-cpp", "pyarrow", "requests", "cmake"]
+requires = ["poetry-core", "wheel", "setuptools-cpp", "pyarrow", "requests==2.31.0", "urllib3==1.26.18" "cmake"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]

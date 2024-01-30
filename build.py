@@ -113,7 +113,7 @@ def build_libaec():
     cmake_path = getCMakePath()
     libaec_path = getLibaec()
     cmake_args = [
-        f"-DCMAKE_INSTALL_PREFIX={get_temp_path('temp_libaec')}", #install into our temp dir
+        f"-DCMAKE_INSTALL_PREFIX={get_temp_path('temp_libaec')}", #install into our temp dir.
     ]
     all_args = cmake_args
     build_path = get_temp_path("temp_libaec") / "build"
@@ -123,7 +123,7 @@ def build_libaec():
     runCmd("make", build_path, ["install"])
     shutil.rmtree(build_path)
     mkPaths([build_path])
-    runCmd(cmake_path, build_path, all_args)  
+    runCmd(cmake_path, build_path, [str(libaec_path)])  
     runCmd("make", build_path)
     runCmd("make", build_path, ["install"])
 
