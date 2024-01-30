@@ -160,7 +160,7 @@ def buildhook(func):
         result =  func(*args, **kwargs)
         print(f"EXTENSION WAS BUILT with result {result}")
         print("copying eccodes lib so they are bundled with the Wheel")
-        lib_extension  = 'dylib' if getSystem() == OSEnv.OSX else 'so'
+        lib_extension  = 'dylib' if getSystem() == OSEnv.OSX else 'so*'
         eccodes_libs = [f for f in get_eccodes_lib_path_as_path().glob("*") if str(f).endswith(lib_extension)]  
         build_dir = get_build_dir()
         build_lib_path = list(get_build_dir().glob("lib*"))[0]
