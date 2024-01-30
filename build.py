@@ -55,7 +55,7 @@ def get_eccodes_include_path() -> Path:
 
 def get_lib_path(func: Callable, as_string: bool = False) -> Union[str, Path]:
     temp = func() / "lib"
-    temp = temp if temp.exists else func() / "lib64"
+    temp = temp if temp.exists() else func() / "lib64"
     return str(temp) if as_string else temp
 
 def get_eccodes_lib_path(as_string: bool = False) -> Union[str, Path]:
@@ -151,7 +151,8 @@ def buildEccodes():
     all_args.extend([str(eccodes_path)])
     runCmd(cmake_path, get_eccodes_build_dir(), all_args)
     runCmd("make", get_eccodes_build_dir())
-    runCmd("ctest", get_eccodes_build_dir())
+    ctest_path = "/".join(cmake_path.split("/")[:-1]) 
+    runCmd(f"{ctest_path}/ctest", get_eccodes_build_dir())
     runCmd("make", get_eccodes_build_dir(), ["install"])
 
 def mk_wheel_dirs(paths):
