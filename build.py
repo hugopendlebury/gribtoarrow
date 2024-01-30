@@ -52,10 +52,12 @@ def get_eccodes_include_path() -> Path:
 
 def get_eccodes_lib_path() -> str:
     p = get_temp_eccodes_path() / "lib"
+    p = p if p.exists() else get_temp_eccodes_path() / "lib64"
     return str(p)
 
 def get_eccodes_lib_path_as_path() -> Path:
-    return get_temp_eccodes_path() / "lib"
+    temp =  get_temp_eccodes_path() / "lib"
+    return temp if temp.exists() else get_temp_eccodes_path() / "lib64"
 
 def get_eccodes_build_dir() -> Path:
     return get_temp_eccodes_path() / "build"
