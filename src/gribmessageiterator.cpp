@@ -23,9 +23,7 @@ Iterator::Iterator(GribReader* reader,
 Iterator& Iterator::operator++() { 
     delete m_ptr;
     codes_handle* h = codes_handle_new_from_file(0, reader->fin, PRODUCT_GRIB, &err);
-    //printf("got new handle %p\n", h);
     if (h == NULL) {
-        //printf("Last message, setting pointer to last message\n");
         m_ptr = m_lastMessage;
     } else {
         message_id++;

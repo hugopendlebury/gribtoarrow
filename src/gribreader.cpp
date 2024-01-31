@@ -57,6 +57,12 @@ GribReader GribReader::withLocations(std::shared_ptr<arrow::Table> locations) {
     return *this;
 }
 
+GribReader GribReader::withRepeatableIterator(bool repeatable) {
+    //TODO - add some validation
+    this->isRepeatable = repeatable;
+    return *this;
+}
+
 void GribReader::validateConversionFields(std::shared_ptr<arrow::Table> locations, std::string table_name) {
     auto table = locations.get();
     auto columns = table->ColumnNames();
@@ -141,6 +147,8 @@ GribReader GribReader::withConversions(std::shared_ptr<arrow::Table> conversions
     //the table should contain 2 columns "lat" and "lon"
     validateConversionFields(conversions, " passed conversions via arrow");
 
+    //TODO - Validate types ?
+
     auto rowConversion = ColumnarTableToVector(conversions);
     
     for (auto row : rowConversion.ValueOrDie()) {
@@ -223,7 +231,13 @@ Iterator GribReader::begin() {
 }
 
 Iterator GribReader::end()   {
+
+    if (isRepeatable) {
+        //TODO Make the iterator repeatable
+        //Not sure how yet need to play with how this iterfaces at the python __iter__, next() and StopIteration level
+    }
     return Iterator( this,  m_endMessage, m_endMessage );
+
 } 
 
 std::optional<GribLocationData*> GribReader::getLocationDataFromCache(std::unique_ptr<GridArea>& area) {
