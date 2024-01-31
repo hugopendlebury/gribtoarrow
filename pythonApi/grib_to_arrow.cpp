@@ -1,5 +1,6 @@
 #include "../src/gribreader.hpp"
 #include "../src/gribmessage.hpp"
+#include "../src/exceptions/notsuchfileexception.hpp"
 
 //#define USE_CMAKE
 
@@ -24,6 +25,8 @@ namespace py = pybind11;
 using namespace std;
 PYBIND11_MODULE(gribtoarrow, m)
 {
+
+    py::register_exception<NoSuchFileException>(m, "NoSuchFileException");
     arrow::py::import_pyarrow();
     py::class_<GribReader>(m, "GribReader")
         .def(py::init<string>(), pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(

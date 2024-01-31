@@ -24,6 +24,7 @@
 #include "gribmessageiterator.hpp"
 #include "caster.hpp"
 #include "converter.hpp"
+#include "exceptions/notsuchfileexception.hpp"
 
 using namespace std;
 namespace cp = arrow::compute;
@@ -37,6 +38,7 @@ GribReader::GribReader(string filepath) : filepath(filepath) {
                     -999l);
     fin = fopen(filepath.c_str(), "rb");
     if (!fin) {
+        throw NoSuchFileException(filepath);
         cout << "Error: unable to open input file" << filepath << endl;
     } else {
         cout << "I'm ready file is " << fin << endl;
