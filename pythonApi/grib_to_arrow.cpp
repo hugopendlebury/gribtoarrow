@@ -5,8 +5,9 @@
 #include "../src/exceptions/arrowtablereadercreationexception.hpp"
 #include "../src/exceptions/arrowgenericexception.hpp"
 #include "../src/exceptions/invalidcsvexception.hpp"
+#include "../src/exceptions/invalidschemaexception.hpp"
 
-//#define USE_CMAKE
+#define USE_CMAKE
 
 #ifdef USE_CMAKE
     #include "../pybind11/include/pybind11/pybind11.h"
@@ -35,8 +36,9 @@ PYBIND11_MODULE(gribtoarrow, m)
     py::register_exception<NoSuchLocationsFileException>(m, "NoSuchLocationsFileException");
     py::register_exception<UnableToCreateArrowTableReaderException>(m, "UnableToCreateArrowTableReaderException");
     py::register_exception<ArrowGenericException>(m, "ArrowGenericException");
-    
-    arrow::py::import_pyarrow();
+    py::register_exception<InvalidSchemaException>(m, "InvalidSchemaException");
+
+    py::module::import("pyarrow");
     py::class_<GribReader>(m, "GribReader")
         .def(py::init<string>(), pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
             Creates a new Grib reader. 

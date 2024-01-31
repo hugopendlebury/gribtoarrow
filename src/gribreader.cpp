@@ -7,7 +7,7 @@
 
 #include "arrow/dataset/file_ipc.h"
 #include "arrow/table.h"
-
+#include <set>
 #include <arrow/api.h>
 #include <arrow/result.h>
 #include <arrow/status.h>
@@ -29,6 +29,7 @@
 #include "exceptions/arrowtablereadercreationexception.hpp"
 #include "exceptions/arrowgenericexception.hpp"
 #include "exceptions/invalidcsvexception.hpp"
+#include "exceptions/invalidschemaexception.hpp"
 
 using namespace std;
 namespace cp = arrow::compute;
@@ -52,15 +53,37 @@ GribReader::GribReader(string filepath) : filepath(filepath) {
 
 GribReader GribReader::withLocations(std::shared_ptr<arrow::Table> locations) {
     //TODO - add some validation
-    //the table should contain 2 columns "lat" and "lon"
     this->shared_locations = locations;
     return *this;
+}
+
+void GribReader::validateConversionFields(std::shared_ptr<arrow::Table> locations, std::string table_name) {
+    auto table = locations.get();
+    auto columns = table->ColumnNames();
+    std::set<std::string> columnsSet(std::make_move_iterator(columns.begin()),
+              std::make_move_iterator(columns.end()));
+
+
+    std::vector<std::string> required_columns = {"parameterId", 
+                                        "addition_value", 
+                                        "subtraction_value",
+                                        "multiplication_value",
+                                        "division_value",
+                                        "ceiling_value"};
+
+    for (auto col : required_columns) {
+        const bool is_in = columnsSet.find(col) != columnsSet.end();
+        if (!is_in){
+            std::string errDetail = "Column " + col + " is not present in schema of table " + table_name;
+            throw InvalidSchemaException(errDetail);
+        }
+    }
 }
 
 GribReader GribReader::withLocations(std::string path){
 
     //Reads a CSV  with the location data and enriches it with a row_number / surrogate_key
-    //TODO add validation of the column names
+
 
     std::shared_ptr<arrow::Table> locations = getTableFromCsv(path, arrow::csv::ConvertOptions::Defaults());
 
@@ -113,6 +136,10 @@ GribReader GribReader::withConversions(std::string conversionsPath) {
 GribReader GribReader::withConversions(std::shared_ptr<arrow::Table> conversions) {
     cout << "Setting conversions" << endl;
     this->conversions = conversions.get();
+
+
+    //the table should contain 2 columns "lat" and "lon"
+    validateConversionFields(conversions, " passed conversions via arrow");
 
     auto rowConversion = ColumnarTableToVector(conversions);
     

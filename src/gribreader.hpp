@@ -1,5 +1,4 @@
-#ifndef GRIB_READER_H_INCLUDED
-#define GRIB_READER_H_INCLUDED
+#pragma once
 
 #include <iterator>
 #include <memory>
@@ -58,7 +57,7 @@ public:
         GribMessage*        m_endMessage;
         std::shared_ptr<arrow::Table> getTableFromCsv(std::string path, arrow::csv::ConvertOptions convertOptions);
         arrow::Result<std::shared_ptr<arrow::Array>> createSurrogateKeyCol(long numberOfRows);
+        void validateConversionFields(std::shared_ptr<arrow::Table> locations, std::string table_name);
 
 
 };
-#endif /*GRIB_READER_H_INCLUDED*/
