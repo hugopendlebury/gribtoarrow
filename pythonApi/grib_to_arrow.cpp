@@ -1,6 +1,10 @@
 #include "../src/gribreader.hpp"
 #include "../src/gribmessage.hpp"
-#include "../src/exceptions/notsuchfileexception.hpp"
+#include "../src/exceptions/nosuchgribfileexception.hpp"
+#include "../src/exceptions/nosuchlocationsfileexception.hpp"
+#include "../src/exceptions/arrowtablereadercreationexception.hpp"
+#include "../src/exceptions/arrowgenericexception.hpp"
+#include "../src/exceptions/invalidcsvexception.hpp"
 
 //#define USE_CMAKE
 
@@ -26,7 +30,12 @@ using namespace std;
 PYBIND11_MODULE(gribtoarrow, m)
 {
 
-    py::register_exception<NoSuchFileException>(m, "NoSuchFileException");
+    py::register_exception<InvalidCSVException>(m, "InvalidCSVException");
+    py::register_exception<NoSuchGribFileException>(m, "NoSuchGribFileException");
+    py::register_exception<NoSuchLocationsFileException>(m, "NoSuchLocationsFileException");
+    py::register_exception<UnableToCreateArrowTableReaderException>(m, "UnableToCreateArrowTableReaderException");
+    py::register_exception<ArrowGenericException>(m, "ArrowGenericException");
+    
     arrow::py::import_pyarrow();
     py::class_<GribReader>(m, "GribReader")
         .def(py::init<string>(), pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(

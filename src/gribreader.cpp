@@ -24,7 +24,11 @@
 #include "gribmessageiterator.hpp"
 #include "caster.hpp"
 #include "converter.hpp"
-#include "exceptions/notsuchfileexception.hpp"
+#include "exceptions/nosuchgribfileexception.hpp"
+#include "exceptions/nosuchlocationsfileexception.hpp"
+#include "exceptions/arrowtablereadercreationexception.hpp"
+#include "exceptions/arrowgenericexception.hpp"
+#include "exceptions/invalidcsvexception.hpp"
 
 using namespace std;
 namespace cp = arrow::compute;
@@ -38,7 +42,7 @@ GribReader::GribReader(string filepath) : filepath(filepath) {
                     -999l);
     fin = fopen(filepath.c_str(), "rb");
     if (!fin) {
-        throw NoSuchFileException(filepath);
+        throw NoSuchGribFileException(filepath);
         cout << "Error: unable to open input file" << filepath << endl;
     } else {
         cout << "I'm ready file is " << fin << endl;
@@ -277,18 +281,39 @@ bool GribReader::hasLocations() {
 }
 
 std::shared_ptr<arrow::Table> GribReader::getTableFromCsv(std::string path, arrow::csv::ConvertOptions convertOptions){
-    std::shared_ptr<arrow::io::ReadableFile> infile = arrow::io::ReadableFile::Open(path).ValueOrDie();
+    auto infile = arrow::io::ReadableFile::Open(path);
+
+    if (infile.ok()) {
+
+        auto csv_reader =
+            arrow::csv::TableReader::Make(
+            arrow::io::default_io_context(), infile.ValueOrDie(), arrow::csv::ReadOptions::Defaults(),
+            arrow::csv::ParseOptions::Defaults(), convertOptions);
+            
+        if(csv_reader.ok()) {
+            auto table = csv_reader.ValueOrDie()->Read();
+            
+            if (table.ok()) {
+                return table.ValueOrDie();
+            } else {
+                std::string errDetails = "Error reading results into arrow table is this a valid CSV ? ";
+                throw InvalidCSVException(errDetails );
+            }
+
+        } else {
+            std::string errDetails = "Unable to create arrow CSV table reader for file " + path;
+            throw UnableToCreateArrowTableReaderException(errDetails);
+        }
 
     
 
-    auto csv_reader =
-        arrow::csv::TableReader::Make(
-            arrow::io::default_io_context(), infile, arrow::csv::ReadOptions::Defaults(),
-            arrow::csv::ParseOptions::Defaults(), convertOptions).ValueOrDie();
-    
-    std::shared_ptr<arrow::Table> table = csv_reader->Read().ValueOrDie();
 
-    return table;
+    } else {
+        throw NoSuchLocationsFileException(path);
+    }
+    
+
+
 }
 
 arrow::Result<std::shared_ptr<arrow::Array>> GribReader::createSurrogateKeyCol(long numberOfRows){
