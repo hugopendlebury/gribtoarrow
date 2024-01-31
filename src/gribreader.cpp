@@ -114,7 +114,6 @@ enum conversionDataTypes {
 
 GribReader GribReader::withConversions(std::string conversionsPath) {
     cout << "Reading conversions CSV" << endl;
-    //TODO add validation of the column names
 
     std::unordered_map<std::string, std::shared_ptr<arrow::DataType>> fieldTypes;
     fieldTypes.emplace(make_pair("parameterId", arrow::int64()));
@@ -129,6 +128,7 @@ GribReader GribReader::withConversions(std::string conversionsPath) {
     convertOptions.column_types = fieldTypes;
 
     std::shared_ptr<arrow::Table> conversions = getTableFromCsv(conversionsPath, convertOptions);
+    validateConversionFields(conversions, " passed conversions via arrow");
     withConversions(conversions);
     return *this;
 }
