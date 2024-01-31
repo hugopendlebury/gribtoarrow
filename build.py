@@ -57,7 +57,7 @@ def check_is_lib_or_lib64() -> bool:
     return (get_temp_eccodes_path() / "lib").exists()
 
 def get_lib_path(func: Callable, as_string: bool = False) -> Union[str, Path]:
-    temp = func() / "lib"
+    temp = func()
     temp = temp / "lib" if check_is_lib_or_lib64() else temp / "lib64"
     return str(temp) if as_string else temp
 
@@ -171,11 +171,11 @@ def buildhook(func):
         print(f"EXTENSION WAS BUILT with result {result}")
         print("copying eccodes lib so they are bundled with the Wheel")
         lib_extension  = '*.dylib' if getSystem() == OSEnv.OSX else '*.so*'
-        eccodes_libs = list(get_eccodes_lib_path(False).glob("*"))
+        eccodes_libs = list(get_eccodes_lib_path(False).glob(lib_extension))
         build_dir = get_build_dir()
         build_lib_path = list(get_build_dir().glob("lib*"))[0]
         build_lib_grib_arrow_path = build_lib_path  / "gribtoarrow"
-        for extension in build_lib_path.glob(f"*.*"):
+        for extension in build_lib_path.glob(lib_extension):
             shutil.copy(extension, build_lib_grib_arrow_path)
         wheel_lib_path_name = "lib" if check_is_lib_or_lib64() else "lib64"
         eccodes_wheel_paths = [build_lib_grib_arrow_path  / "eccodes", build_lib_grib_arrow_path  / wheel_lib_path_name]

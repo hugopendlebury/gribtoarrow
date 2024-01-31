@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gribtoarrow"
-version = "0.1.11"
+version = "0.1.12"
 description = "gribtoarrow is a python module to export data in the GRIB format to Apache Arrow"
 authors = ["Hugo Pendlebury", "Lewis Wilkins"]
 readme = "README.md"
