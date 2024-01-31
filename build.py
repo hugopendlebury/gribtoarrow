@@ -53,9 +53,12 @@ def get_temp_libaec_path() -> Path:
 def get_eccodes_include_path() -> Path:
     return get_temp_eccodes_path() / "include"
 
+def check_is_lib_or_lib64() -> bool:
+    return (get_temp_eccodes_path() / "lib").exists()
+
 def get_lib_path(func: Callable, as_string: bool = False) -> Union[str, Path]:
     temp = func() / "lib"
-    temp = temp if temp.exists() else func() / "lib64"
+    temp = temp / "lib" if check_is_lib_or_lib64() else temp / "lib64"
     return str(temp) if as_string else temp
 
 def get_eccodes_lib_path(as_string: bool = False) -> Union[str, Path]:
@@ -174,7 +177,8 @@ def buildhook(func):
         build_lib_grib_arrow_path = build_lib_path  / "gribtoarrow"
         for extension in build_lib_path.glob(f"*.*"):
             shutil.copy(extension, build_lib_grib_arrow_path)
-        eccodes_wheel_paths = [build_lib_grib_arrow_path  / "eccodes", build_lib_grib_arrow_path  / "lib"]
+        wheel_lib_path_name = "lib" if check_is_lib_or_lib64() else "lib64"
+        eccodes_wheel_paths = [build_lib_grib_arrow_path  / "eccodes", build_lib_grib_arrow_path  / wheel_lib_path_name]
         mk_wheel_dirs(eccodes_wheel_paths)
         eccodes_main_path, eccodes_memfs_path = eccodes_wheel_paths
         libaec_libs = list(get_lib_path(get_temp_libaec_path).glob(lib_extension))
