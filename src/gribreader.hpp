@@ -60,6 +60,7 @@ public:
         std::shared_ptr<arrow::Table> getTableFromCsv(std::string path, arrow::csv::ConvertOptions convertOptions);
         arrow::Result<std::shared_ptr<arrow::Array>> createSurrogateKeyCol(long numberOfRows);
         void validateConversionFields(std::shared_ptr<arrow::Table> locations, std::string table_name);
+        void castConversionFields(std::shared_ptr<arrow::Table> locations, std::string table_name) ;
 
 
 };

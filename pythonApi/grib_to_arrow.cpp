@@ -7,7 +7,7 @@
 #include "../src/exceptions/invalidcsvexception.hpp"
 #include "../src/exceptions/invalidschemaexception.hpp"
 
-#define USE_CMAKE
+//#define USE_CMAKE
 
 #ifdef USE_CMAKE
     #include "../pybind11/include/pybind11/pybind11.h"

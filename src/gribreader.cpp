@@ -86,6 +86,34 @@ void GribReader::validateConversionFields(std::shared_ptr<arrow::Table> location
     }
 }
 
+void GribReader::castConversionFields(std::shared_ptr<arrow::Table> locations, std::string table_name) {
+    auto table = locations.get();
+
+    std::vector<std::string> f64_cols = {"addition_value", 
+                                        "subtraction_value",
+                                        "multiplication_value",
+                                        "division_value",
+                                        "ceiling_value"};
+    
+    for (auto colName: f64_cols) {
+        auto col = table->GetColumnByName(colName).get();
+
+        cp::CastOptions castOptions;
+        castOptions.to_type = arrow::float64().get();
+
+        auto x = arrow::float64().get();
+        for (auto chunk : col->chunks()) {
+            auto arr = chunk.get();
+            auto result = cp::Cast(*arr, castOptions.to_type, castOptions);
+            if (result.ok()) {
+                auto converted = result.ValueOrDie();
+                //Ok it's converted do we need to update the table ?
+            }
+        }
+    }
+
+}
+
 GribReader GribReader::withLocations(std::string path){
 
     //Reads a CSV  with the location data and enriches it with a row_number / surrogate_key
