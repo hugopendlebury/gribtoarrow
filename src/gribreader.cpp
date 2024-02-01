@@ -253,6 +253,7 @@ optional<function<arrow::Result<shared_ptr<arrow::Array>>(shared_ptr<arrow::Arra
 }
 
 Iterator GribReader::begin() { 
+    std::cout << "Creating iterator" << endl;
     codes_handle* h = codes_handle_new_from_file(0, fin, PRODUCT_GRIB, &err);
     auto m = new GribMessage(this, h, 0l);
     return Iterator(this, m, m_endMessage);
@@ -261,8 +262,8 @@ Iterator GribReader::begin() {
 Iterator GribReader::end()   {
 
     if (isRepeatable) {
-        //TODO Make the iterator repeatable
-        //Not sure how yet need to play with how this iterfaces at the python __iter__, next() and StopIteration level
+        std::cout << "At end of message and is repeatable" << endl;
+        fseek(fin, 0, SEEK_SET);
     }
     return Iterator( this,  m_endMessage, m_endMessage );
 

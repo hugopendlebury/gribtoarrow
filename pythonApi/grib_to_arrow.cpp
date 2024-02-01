@@ -109,6 +109,9 @@ PYBIND11_MODULE(gribtoarrow, m)
             e.g. If you wanted to convert from Kelvin to Celcius you would pass a table which contained the parameterId and
             contained 273.15 in the column subtraction_value                
         )EOL") 
+        .def("withRepeatableIterator", &GribReader::withRepeatableIterator, pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
+            Enables the message to be iterated multiple times.                 
+        )EOL") 
         .def(
             "__iter__",
             [](GribReader &s) { return py::make_iterator(s.begin(), s.end()); },
