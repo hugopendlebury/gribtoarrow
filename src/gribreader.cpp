@@ -95,6 +95,7 @@ void GribReader::castConversionFields(std::shared_ptr<arrow::Table> locations, s
                                         "division_value",
                                         "ceiling_value"};
     
+    std::vector<std::shared_ptr<arrow::ChunkedArray>> resultsArray;
     for (auto colName: f64_cols) {
         auto col = table->GetColumnByName(colName).get();
 
@@ -102,15 +103,28 @@ void GribReader::castConversionFields(std::shared_ptr<arrow::Table> locations, s
         castOptions.to_type = arrow::float64().get();
 
         auto x = arrow::float64().get();
+        auto chunkVector = new arrow::ArrayVector();
         for (auto chunk : col->chunks()) {
             auto arr = chunk.get();
-            auto result = cp::Cast(*arr, castOptions.to_type, castOptions);
+            auto result = cp::Cast(*arr, arrow::float64().get(), castOptions);
             if (result.ok()) {
                 auto converted = result.ValueOrDie();
-                //Ok it's converted do we need to update the table ?
+                chunkVector->emplace_back(converted);
+            } else{
+                std::string errMsg = "Unable to cast conversion column " + colName + " to float64";
+                throw new InvalidSchemaException(errMsg);
             }
         }
+        auto chunkedArrayResult = col->Make(*chunkVector, arrow::float64());
+        if(chunkedArrayResult.ok()) {
+            resultsArray.push_back(chunkedArrayResult.ValueOrDie());
+        }else {
+            std::string errMsg = "Unable to create arrow column for column " + colName;
+            throw new InvalidSchemaException(errMsg);
+        }
+
     }
+
 
 }
 
@@ -375,14 +389,9 @@ std::shared_ptr<arrow::Table> GribReader::getTableFromCsv(std::string path, arro
             throw UnableToCreateArrowTableReaderException(errDetails);
         }
 
-    
-
-
     } else {
         throw NoSuchLocationsFileException(path);
     }
-    
-
 
 }
 

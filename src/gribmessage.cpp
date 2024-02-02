@@ -229,6 +229,7 @@ using namespace std;
 
     GribMessage::~GribMessage() {
         //printf("Destuctor called on handle %p\n", h);
+        //codes_grib_nearest_delete()
         codes_handle_delete(h);
     }
 
@@ -344,6 +345,9 @@ using namespace std;
                 free(outvalues);
                 free(distances);
             }
+
+             
+            
 
             grib_nearest_find_multiple(h,1, inlats, inlons, 
                                     numberOfPoints, outlats, outlons, outvalues, distances, indexes);
