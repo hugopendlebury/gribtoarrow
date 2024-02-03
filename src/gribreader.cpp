@@ -44,11 +44,7 @@ GribReader::GribReader(string filepath) : filepath(filepath) {
     fin = fopen(filepath.c_str(), "rb");
     if (!fin) {
         throw NoSuchGribFileException(filepath);
-        cout << "Error: unable to open input file" << filepath << endl;
-    } else {
-        cout << "I'm ready file is " << fin << endl;
-        
-    }
+    } 
 };
 
 GribReader GribReader::withLocations(std::shared_ptr<arrow::Table> locations) {
@@ -86,45 +82,72 @@ void GribReader::validateConversionFields(std::shared_ptr<arrow::Table> location
     }
 }
 
-void GribReader::castConversionFields(std::shared_ptr<arrow::Table> locations, std::string table_name) {
+arrow::ArrayVector* GribReader::castColumn(std::shared_ptr<arrow::Table> locations, 
+                    std::string colName,
+                    std::shared_ptr<arrow::DataType> fieldType) {
+    
     auto table = locations.get();
+    auto col = table->GetColumnByName(colName).get();
+    cp::CastOptions castOptions;
+    castOptions.to_type = fieldType.get();
 
-    std::vector<std::string> f64_cols = {"addition_value", 
-                                        "subtraction_value",
-                                        "multiplication_value",
-                                        "division_value",
-                                        "ceiling_value"};
+    auto chunkVector = new arrow::ArrayVector();
+
+    for (auto chunk : col->chunks()) {
+        auto arr = chunk.get();
+        auto result = cp::Cast(*arr, fieldType.get(), castOptions);
+        if (result.ok()) {
+            auto converted = result.ValueOrDie();
+            chunkVector->emplace_back(converted);
+        } else{
+            std::string errMsg = "Unable to cast conversion column " + colName;
+            throw InvalidSchemaException(errMsg);
+        }
+    }
+    return chunkVector;
+}
+
+std::shared_ptr<arrow::Table> GribReader::castConversionFields(std::shared_ptr<arrow::Table> locations, std::string table_name) {
+    
+    //Ok this is a PITA - Although there is a .swap method of a column it doesn't work if we want to 
+    //swap the column with a new data type
+    //trying to remove and add wasn't working either so we basically create a new table
+
+    auto table = locations.get();
     
     std::vector<std::shared_ptr<arrow::ChunkedArray>> resultsArray;
-    for (auto colName: f64_cols) {
+    arrow::FieldVector fieldVector;
+
+    std::unordered_map<std::string, std::shared_ptr<arrow::DataType>> fieldTypes;
+    fieldTypes.emplace(make_pair("parameterId", arrow::int64()));
+    fieldTypes.emplace(make_pair("addition_value", arrow::float64()));
+    fieldTypes.emplace(make_pair("subtraction_value", arrow::float64()));
+    fieldTypes.emplace(make_pair("multiplication_value", arrow::float64()));
+    fieldTypes.emplace(make_pair("division_value", arrow::float64()));
+    fieldTypes.emplace(make_pair("ceiling_value", arrow::float64()));
+
+                                        
+    for (auto colDetails: fieldTypes) {
+        
+        auto colName = colDetails.first;
+        auto colType = colDetails.second;
+        fieldVector.push_back(arrow::field(colName, colType));
+        
+        auto chunkVector = castColumn(locations, colName, colType);
         auto col = table->GetColumnByName(colName).get();
-
-        cp::CastOptions castOptions;
-        castOptions.to_type = arrow::float64().get();
-
-        auto x = arrow::float64().get();
-        auto chunkVector = new arrow::ArrayVector();
-        for (auto chunk : col->chunks()) {
-            auto arr = chunk.get();
-            auto result = cp::Cast(*arr, arrow::float64().get(), castOptions);
-            if (result.ok()) {
-                auto converted = result.ValueOrDie();
-                chunkVector->emplace_back(converted);
-            } else{
-                std::string errMsg = "Unable to cast conversion column " + colName + " to float64";
-                throw new InvalidSchemaException(errMsg);
-            }
-        }
-        auto chunkedArrayResult = col->Make(*chunkVector, arrow::float64());
+        auto chunkedArrayResult = col->Make(*chunkVector, colType);
         if(chunkedArrayResult.ok()) {
-            resultsArray.push_back(chunkedArrayResult.ValueOrDie());
+            resultsArray.emplace_back(chunkedArrayResult.ValueOrDie());
         }else {
-            std::string errMsg = "Unable to create arrow column for column " + colName;
-            throw new InvalidSchemaException(errMsg);
-        }
-
+            std::string errMsg = "Unable to create arrow column for column " + colName  + " " + chunkedArrayResult.status().message();
+            throw InvalidSchemaException(errMsg);
+        } 
     }
 
+    auto schema = arrow::schema(fieldVector);
+    auto newTable = arrow::Table::Make(schema, resultsArray);
+
+    return newTable;
 
 }
 
@@ -183,20 +206,20 @@ GribReader GribReader::withConversions(std::string conversionsPath) {
 
 GribReader GribReader::withConversions(std::shared_ptr<arrow::Table> conversions) {
     cout << "Setting conversions" << endl;
-    this->conversions = conversions.get();
-
+    auto conv = conversions.get();
 
     //the table should contain 2 columns "lat" and "lon"
     validateConversionFields(conversions, " passed conversions via arrow");
-
-    //TODO - Validate types ?
-
+    std::cout << "Fields validated" << std::endl;
+    conversions = castConversionFields(conversions, " passed conversions via arrow");
+        
     auto rowConversion = ColumnarTableToVector(conversions);
     
     for (auto row : rowConversion.ValueOrDie()) {
 
         cout <<  "adding conversions" << endl ;
 
+        
         vector<pair<conversionMethods, optional<double>>> methods {
                             make_pair(conversionMethods::Add, row.additionValue), 
                             make_pair(conversionMethods::Subtract, row.subtractionValue), 
@@ -213,11 +236,6 @@ GribReader GribReader::withConversions(std::shared_ptr<arrow::Table> conversions
             }
 
         }
-
-        //REMOVED THIS - Only present in newer compilers
-        //auto match = ranges::find_if(methods, [](const pair<conversionTypes, optional<double>>& v) {
-        //    return v.second.has_value();
-        //});
 
         if (match) {
             cout << "Adding to cache for " << row.parameterId << endl;
@@ -250,8 +268,9 @@ GribReader GribReader::withConversions(std::shared_ptr<arrow::Table> conversions
             auto converter = new Converter(conversionFunc, firstMatch.second.value());
 
             conversion_funcs.emplace(row.parameterId, converter);
-             
+            
         }
+        
     }
     
     return *this;

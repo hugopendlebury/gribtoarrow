@@ -32,42 +32,24 @@ using arrow::ListBuilder;
 
 arrow::Result<std::vector<data_row>> ColumnarTableToVector(
     const std::shared_ptr<arrow::Table>& table) {
-  // To convert an Arrow table back into the same row-wise representation as in the
-  // above section, we first will check that the table conforms to our expected
-  // schema and then will build up the vector of rows incrementally.
-  //
-  // For the check if the table is as expected, we can utilise solely its schema.
-  std::vector<std::shared_ptr<arrow::Field>> schema_vector = {
-      arrow::field("parameterId", arrow::int64()), 
-      arrow::field("addition_value", arrow::float64()),
-      arrow::field("subtraction_value", arrow::float64()),
-      arrow::field("multiplication_value", arrow::float64()),
-      arrow::field("division_value", arrow::float64()),
-      arrow::field("ceiling_value", arrow::float64()),
-      };
-  auto expected_schema = std::make_shared<arrow::Schema>(schema_vector);
 
-  std::cout << "YOYO" << std::endl;
+    //Converts the table to a row wise representation
+    //Note we have already checked the table column names and cast and data types
+    //so the schema should be fine
 
-  if (!expected_schema->Equals(*table->schema())) {
-    // The table doesn't have the expected schema thus we cannot directly
-    // convert it to our target representation.
-    std::cout << "Schemas are not matching" << std::endl;
-    return arrow::Status::Invalid("Schemas are not matching!");
-  }
+    //TODO - should we really be just using chunk(0) ?
 
-
-  auto parameterIds = std::static_pointer_cast<arrow::Int64Array>(table->column(0)->chunk(0));
+  auto parameterIds = std::static_pointer_cast<arrow::Int64Array>(table->GetColumnByName("parameterId")->chunk(0));
   auto additionValues =
-      std::static_pointer_cast<arrow::DoubleArray>(table->column(1)->chunk(0));
+      std::static_pointer_cast<arrow::DoubleArray>(table->GetColumnByName("addition_value")->chunk(0));
   auto subtractionValues =
-      std::static_pointer_cast<arrow::DoubleArray>(table->column(2)->chunk(0));
+      std::static_pointer_cast<arrow::DoubleArray>(table->GetColumnByName("subtraction_value")->chunk(0));
   auto multiplicationValues =
-      std::static_pointer_cast<arrow::DoubleArray>(table->column(3)->chunk(0));
+      std::static_pointer_cast<arrow::DoubleArray>(table->GetColumnByName("multiplication_value")->chunk(0));
   auto divisionValues =
-      std::static_pointer_cast<arrow::DoubleArray>(table->column(4)->chunk(0));
+      std::static_pointer_cast<arrow::DoubleArray>(table->GetColumnByName("division_value")->chunk(0));
   auto ceilingValues =
-      std::static_pointer_cast<arrow::DoubleArray>(table->column(5)->chunk(0));
+      std::static_pointer_cast<arrow::DoubleArray>(table->GetColumnByName("ceiling_value")->chunk(0));
 
   std::vector<data_row> rows;
   for (int64_t i = 0; i < table->num_rows(); i++) {
