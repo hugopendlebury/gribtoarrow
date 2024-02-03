@@ -8,7 +8,6 @@
 #include "arrow/dataset/file_ipc.h"
 #include "arrow/table.h"
 #include <set>
-#include <arrow/api.h>
 #include <arrow/result.h>
 #include <arrow/status.h>
 #include <arrow/compute/api_scalar.h>
@@ -24,6 +23,7 @@
 #include "gribmessageiterator.hpp"
 #include "caster.hpp"
 #include "converter.hpp"
+#include "gribhelpers.hpp"
 #include "exceptions/nosuchgribfileexception.hpp"
 #include "exceptions/nosuchlocationsfileexception.hpp"
 #include "exceptions/arrowtablereadercreationexception.hpp"
@@ -110,7 +110,8 @@ arrow::ArrayVector* GribReader::castColumn(std::shared_ptr<arrow::Table> locatio
 std::shared_ptr<arrow::Table> GribReader::castConversionFields(std::shared_ptr<arrow::Table> locations, std::string table_name) {
     
     //Ok this is a PITA - Although there is a .swap method of a column it doesn't work if we want to 
-    //swap the column with a new data type
+    //swap the column with a new data type or had an issue with 
+    //TODO see if we can use swap - was it a problem with mixing datatypes which was resolved on 3rd Feb ?
     //trying to remove and add wasn't working either so we basically create a new table
 
     auto table = locations.get();
@@ -118,15 +119,8 @@ std::shared_ptr<arrow::Table> GribReader::castConversionFields(std::shared_ptr<a
     std::vector<std::shared_ptr<arrow::ChunkedArray>> resultsArray;
     arrow::FieldVector fieldVector;
 
-    std::unordered_map<std::string, std::shared_ptr<arrow::DataType>> fieldTypes;
-    fieldTypes.emplace(make_pair("parameterId", arrow::int64()));
-    fieldTypes.emplace(make_pair("addition_value", arrow::float64()));
-    fieldTypes.emplace(make_pair("subtraction_value", arrow::float64()));
-    fieldTypes.emplace(make_pair("multiplication_value", arrow::float64()));
-    fieldTypes.emplace(make_pair("division_value", arrow::float64()));
-    fieldTypes.emplace(make_pair("ceiling_value", arrow::float64()));
-
-                                        
+    auto fieldTypes = getConversionFieldDefinitions();
+                                   
     for (auto colDetails: fieldTypes) {
         
         auto colName = colDetails.first;
@@ -186,14 +180,7 @@ enum conversionDataTypes {
 GribReader GribReader::withConversions(std::string conversionsPath) {
     cout << "Reading conversions CSV" << endl;
 
-    std::unordered_map<std::string, std::shared_ptr<arrow::DataType>> fieldTypes;
-    fieldTypes.emplace(make_pair("parameterId", arrow::int64()));
-    fieldTypes.emplace(make_pair("addition_value", arrow::float64()));
-    fieldTypes.emplace(make_pair("subtraction_value", arrow::float64()));
-    fieldTypes.emplace(make_pair("multiplication_value", arrow::float64()));
-    fieldTypes.emplace(make_pair("division_value", arrow::float64()));
-    fieldTypes.emplace(make_pair("ceiling_value", arrow::float64()));
-
+    auto fieldTypes = getConversionFieldDefinitions();
 
     auto convertOptions = arrow::csv::ConvertOptions::Defaults();
     convertOptions.column_types = fieldTypes;
@@ -399,8 +386,7 @@ std::shared_ptr<arrow::Table> GribReader::getTableFromCsv(std::string path, arro
             if (table.ok()) {
                 return table.ValueOrDie();
             } else {
-                std::string errDetails = "Error reading results into arrow table is this a valid CSV ? "
-                    + " " + table.status().message();
+                std::string errDetails = "Error reading results into arrow table is this a valid CSV ? " + table.status().message();
                 throw InvalidCSVException(errDetails );
             }
 

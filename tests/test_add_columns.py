@@ -46,17 +46,17 @@ class TestColumns():
 
     def test_auto_columns(self, resource):
         """The columns parameterId, modelNo, forecast_date, datetime are added to the results 
-        when getDataWithLocations is called. Ensure that the automatically added fields are the same
+        when getDataWithLocations is called. Ensure that these automatically added fields are the same
         as the values obtained when calling the function directly on the message
         """
 
         from gribtoarrow import GribReader
 
-        stations = pl.DataFrame(
+        locations = pl.DataFrame(
             {"lat": [51.5054, 53.4808], "lon": [-0.027176, 2.2426]}
         ).to_arrow()
 
-        reader = GribReader(str(resource) + "/gep01.t00z.pgrb2a.0p50.f003").withLocations(stations)
+        reader = GribReader(str(resource) + "/gep01.t00z.pgrb2a.0p50.f003").withLocations(locations)
         data = []
         for message in reader:
             df = pl.from_arrow(message.getDataWithLocations()).with_columns(

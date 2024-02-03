@@ -6,16 +6,20 @@ import pyarrow
 
 class TestLocations:
 
-    def test_default_fields_present(self, resource):
-        from gribtoarrow import GribReader
-
-        stations = pl.DataFrame(
+    def __getLocations(self):
+        # Locations are Canary Wharf and Manchester
+        return pl.DataFrame(
             {"lat": [51.5054, 53.4808], "lon": [-0.027176, 2.2426]}
         ).to_arrow()
+
+    def test_default_fields_present(self, resource):
+        from gribtoarrow import GribReader
     
+        locations = self.__getLocations()
+
         reader = GribReader(
             str(resource) + "/gep01.t00z.pgrb2a.0p50.f003"
-        ).withLocations(stations)
+        ).withLocations(locations)
 
         df = pl.concat(
             pl.from_arrow(message.getDataWithLocations()) for message in reader
@@ -43,15 +47,12 @@ class TestLocations:
 
         # With 85 messages and 259920 points per message size should be 22093200
         assert len(df) == 22093200
-
-        # Locations are Canary Wharf and Manchester
-        stations = pl.DataFrame(
-            {"lat": [51.5054, 53.4808], "lon": [-0.027176, 2.2426]}
-        ).to_arrow()
+  
+        locations = self.__getLocations()
 
         reader = GribReader(
             str(resource) + "/gep01.t00z.pgrb2a.0p50.f003"
-        ).withLocations(stations)
+        ).withLocations(locations)
 
         df = pl.concat(
             pl.from_arrow(message.getDataWithLocations()) for message in reader
@@ -65,7 +66,7 @@ class TestLocations:
         #Any fields added to the location metadata lookup should be passed through after find nearest is performed
         from gribtoarrow import GribReader
 
-        stations = pl.DataFrame(
+        locations = pl.DataFrame(
             {"lat": [51.5054, 53.4808], 
              "lon": [-0.027176, 2.2426],
              "name": ["Canary Wharf", "Manchester"],
@@ -76,7 +77,7 @@ class TestLocations:
 
         reader = GribReader(
             str(resource) + "/gep01.t00z.pgrb2a.0p50.f003"
-        ).withLocations(stations)
+        ).withLocations(locations)
 
         df : pl.DataFrame = pl.concat(
             pl.from_arrow(message.getDataWithLocations()) for message in reader

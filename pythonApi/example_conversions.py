@@ -32,7 +32,7 @@ reader = (
 payloads = []
 for message in reader:
     df = (
-		pl.from_arrow(message.getDataWithStations())
+		pl.from_arrow(message.getDataWithLocations())
 			.with_columns([
                      		pl.lit(message.getParameterId()).alias("paramId")
 			])

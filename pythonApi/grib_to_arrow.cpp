@@ -52,7 +52,7 @@ PYBIND11_MODULE(gribtoarrow, m)
 
             Parameters
             ----------
-            stations (pyArrow.Table): A PyArrow table which contains a minimum of 2 columns called lat and lon
+            locations (pyArrow.Table): A PyArrow table which contains a minimum of 2 columns called lat and lon
 
             The grib will be filtered by any of the coordinates given by lat and lon which are within the grid of 
             the underlying message.
@@ -208,8 +208,8 @@ PYBIND11_MODULE(gribtoarrow, m)
 
             There are two methods available to access the data:
 
-            getData() - Will return all the data present in the values array for the message even if station were defined in the reader
-            getDataWithLocations() - Restricts the results which are within the bounds of the coordinates of the message and the stations
+            getData() - Will return all the data present in the values array for the message even if locations were defined in the reader
+            getDataWithLocations() - Restricts the results which are within the bounds of the coordinates of the message and the locationss
                                     defined in the reader class
         )EOL";
         ;
