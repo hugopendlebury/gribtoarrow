@@ -100,7 +100,7 @@ arrow::ArrayVector* GribReader::castColumn(std::shared_ptr<arrow::Table> locatio
             auto converted = result.ValueOrDie();
             chunkVector->emplace_back(converted);
         } else{
-            std::string errMsg = "Unable to cast conversion column " + colName;
+            std::string errMsg = "Unable to cast conversion column " + colName + " " + result.status().message();
             throw InvalidSchemaException(errMsg);
         }
     }
@@ -399,17 +399,19 @@ std::shared_ptr<arrow::Table> GribReader::getTableFromCsv(std::string path, arro
             if (table.ok()) {
                 return table.ValueOrDie();
             } else {
-                std::string errDetails = "Error reading results into arrow table is this a valid CSV ? ";
+                std::string errDetails = "Error reading results into arrow table is this a valid CSV ? "
+                    + " " + table.status().message();
                 throw InvalidCSVException(errDetails );
             }
 
         } else {
-            std::string errDetails = "Unable to create arrow CSV table reader for file " + path;
+            std::string errDetails = "Unable to create arrow CSV table reader for file " + path + 
+                " " + csv_reader.status().message();
             throw UnableToCreateArrowTableReaderException(errDetails);
         }
 
     } else {
-        throw NoSuchLocationsFileException(path);
+        throw NoSuchLocationsFileException(path + " " + infile.status().message());
     }
 
 }
