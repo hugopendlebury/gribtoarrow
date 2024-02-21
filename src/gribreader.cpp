@@ -273,18 +273,24 @@ optional<function<arrow::Result<shared_ptr<arrow::Array>>(shared_ptr<arrow::Arra
 }
 
 Iterator GribReader::begin() { 
-    std::cout << "Creating iterator" << endl;
-    codes_handle* h = codes_handle_new_from_file(0, fin, PRODUCT_GRIB, &err);
-    auto m = new GribMessage(this, h, 0l);
-    return Iterator(this, m, m_endMessage);
+    if(isRepeatable) {
+        fseek(fin, 0, SEEK_SET);
+    }
+    if (!isExhausted || isRepeatable) {
+        std::cout << "Creating iterator" << endl;
+        codes_handle* h = codes_handle_new_from_file(0, fin, PRODUCT_GRIB, &err);
+        auto m = new GribMessage(this, h, 0l);
+        return Iterator(this, m, m_endMessage);
+    } else {
+        std::cout << "Iterator is exhausted returning end_message" << endl;
+        return Iterator( this,  m_endMessage, m_endMessage );
+    }
 }
 
 Iterator GribReader::end()   {
 
-    if (isRepeatable) {
-        std::cout << "At end of message and is repeatable" << endl;
-        fseek(fin, 0, SEEK_SET);
-    }
+    isExhausted = true;
+    std::cout << "At end of message and is not repeatable" << endl;
     return Iterator( this,  m_endMessage, m_endMessage );
 
 } 

@@ -16,18 +16,16 @@ class TestIteration:
         reader = GribReader(str(resource) + "/meps_weatherapi_sorlandet.grb")
         
         cnt = self.get_iterator_count(reader)
-        assert cnt == 269
+        assert cnt == 268
         cnt = self.get_iterator_count(reader)
         assert cnt == 0
 
-    def test_iterate_once(self, resource):
+    def test_iterate_repeatable(self, resource):
         from gribtoarrow import GribReader
 
         reader = GribReader(str(resource) + "/meps_weatherapi_sorlandet.grb").withRepeatableIterator(True)
-
-        it = iter(reader)
         
         cnt = self.get_iterator_count(reader)
-        assert cnt == 269
+        assert cnt == 268
         cnt = self.get_iterator_count(reader)
-        assert cnt == 269
+        assert cnt == 268

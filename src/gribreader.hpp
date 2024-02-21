@@ -51,6 +51,7 @@ public:
         string filepath;
         int err             = 0;
         bool isRepeatable = false;
+        bool isExhausted  = false;
         std::shared_ptr<arrow::Table> shared_locations;
         arrow::Table*       conversions = NULLPTR;
         std::unordered_map<GridArea, std::shared_ptr<arrow::Table>> locations_in_area;
