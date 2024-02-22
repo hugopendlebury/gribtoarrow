@@ -134,7 +134,9 @@ using namespace std;
     }
 
     long GribMessage::getModelNumber() {
-        return getNumericParameter("number");
+        //Had some issues with this key missing 
+        //maybe it isn't mandatory so use this method
+        return getNumericParameterOrDefault("number", 0l);
     }
 
     long GribMessage::getStep() {
@@ -243,7 +245,7 @@ using namespace std;
         if(err !=0 ) {
             std::ostringstream oss;
             oss << "Error calling codes_get_length whilst trying to access string key with name " <<
-             parameterName << "got error code " << err
+             parameterName << "got error code " << err << " whilst processing message id " << _message_id
              << " whilst processing file " << _reader->getFilePath();
 
             throw GribException (oss.str());
@@ -253,7 +255,7 @@ using namespace std;
         if(err !=0 ) {
             std::ostringstream oss;
             oss << "Error calling codes_get_string whilst trying to access string key with name " <<
-             parameterName << "got error code " << err
+             parameterName << "got error code " << err << " whilst processing message id " << _message_id
              << " whilst processing file " << _reader->getFilePath();
 
             throw GribException (oss.str());
@@ -269,6 +271,7 @@ using namespace std;
         if(err !=0 ) {
             std::ostringstream oss;
             oss << "Error calling codes_get_double got error code " << err
+             << " Whilst trying to get key" << parameterName << " in message id " << _message_id
              << " whilst processing file " << _reader->getFilePath();
 
             throw GribException (oss.str());
@@ -288,6 +291,7 @@ using namespace std;
         if(err !=0 ) {
             std::ostringstream oss;
             oss << "Error calling codes_get_double got error code " << err
+            << "Whilst trying to get key" << parameterName << " in message id " << _message_id
              << " whilst processing file " << _reader->getFilePath();
 
             throw GribException (oss.str());
