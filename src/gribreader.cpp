@@ -350,8 +350,6 @@ Iterator GribReader::begin() {
 
 Iterator GribReader::end()   {
 
-    isExhausted = true;
-    std::cout << "At end of message and is not repeatable" << endl;
     return Iterator( this,  m_endMessage, m_endMessage );
 
 } 
