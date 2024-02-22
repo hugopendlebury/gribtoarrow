@@ -6,6 +6,7 @@
 #include "../src/exceptions/arrowgenericexception.hpp"
 #include "../src/exceptions/invalidcsvexception.hpp"
 #include "../src/exceptions/invalidschemaexception.hpp"
+#include "../src/exceptions/gribexception.hpp"
 
 //#define USE_CMAKE
 
@@ -37,6 +38,7 @@ PYBIND11_MODULE(gribtoarrow, m)
     py::register_exception<UnableToCreateArrowTableReaderException>(m, "UnableToCreateArrowTableReaderException");
     py::register_exception<ArrowGenericException>(m, "ArrowGenericException");
     py::register_exception<InvalidSchemaException>(m, "InvalidSchemaException");
+    py::register_exception<GribException>(m, "GribException");
 
     py::module::import("pyarrow");
     py::class_<GribReader>(m, "GribReader")

@@ -11,6 +11,7 @@
 #include "caster.hpp"
 #include "gribmessage.hpp"
 #include "arrowutils.hpp"
+#include "exceptions/gribexception.hpp"
 
 
 
@@ -238,9 +239,25 @@ using namespace std;
     string GribMessage::getStringParameter(string parameterName) {
         size_t parameterNameLength;
         auto  parameterNameC = parameterName.c_str();
-        codes_get_length(h, parameterNameC, &parameterNameLength);
+        auto err = codes_get_length(h, parameterNameC, &parameterNameLength);
+        if(err !=0 ) {
+            std::ostringstream oss;
+            oss << "Error calling codes_get_length whilst trying to access string key with name " <<
+             parameterName << "got error code " << err
+             << " whilst processing file " << _reader->getFilePath();
+
+            throw GribException (oss.str());
+        }
         auto short_name = new char[parameterNameLength];
-        codes_get_string(h, parameterNameC, short_name, &parameterNameLength);
+        err = codes_get_string(h, parameterNameC, short_name, &parameterNameLength);
+        if(err !=0 ) {
+            std::ostringstream oss;
+            oss << "Error calling codes_get_string whilst trying to access string key with name " <<
+             parameterName << "got error code " << err
+             << " whilst processing file " << _reader->getFilePath();
+
+            throw GribException (oss.str());
+        }
         string short_name_std = short_name;
         delete [] short_name;
         return short_name_std;
@@ -248,7 +265,14 @@ using namespace std;
 
     long GribMessage::getNumericParameter(string parameterName) {
         long parameterId;
-        codes_get_long(h, parameterName.c_str(), &parameterId);
+        auto err = codes_get_long(h, parameterName.c_str(), &parameterId);
+        if(err !=0 ) {
+            std::ostringstream oss;
+            oss << "Error calling codes_get_double got error code " << err
+             << " whilst processing file " << _reader->getFilePath();
+
+            throw GribException (oss.str());
+        }
         return parameterId;
     }
 
@@ -260,7 +284,14 @@ using namespace std;
 
     double GribMessage::getDoubleParameter(string parameterName) {
         double parameterId;
-        codes_get_double(h, parameterName.c_str(), &parameterId);
+        auto err = codes_get_double(h, parameterName.c_str(), &parameterId);
+        if(err !=0 ) {
+            std::ostringstream oss;
+            oss << "Error calling codes_get_double got error code " << err
+             << " whilst processing file " << _reader->getFilePath();
+
+            throw GribException (oss.str());
+        }
         return parameterId;
     }
 

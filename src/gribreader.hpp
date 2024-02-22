@@ -48,6 +48,7 @@ public:
     GribLocationData* addLocationDataToCache(std::unique_ptr<GridArea>& area, GribLocationData* locationData);
 
     void setExhausted(bool status);
+    std::string getFilePath();
 
     private:
         string filepath;

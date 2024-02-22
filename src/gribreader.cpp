@@ -30,6 +30,7 @@
 #include "exceptions/arrowgenericexception.hpp"
 #include "exceptions/invalidcsvexception.hpp"
 #include "exceptions/invalidschemaexception.hpp"
+#include "exceptions/gribexception.hpp"
 
 using namespace std;
 namespace cp = arrow::compute;
@@ -340,6 +341,15 @@ Iterator GribReader::begin() {
     if (!isExhausted || isRepeatable) {
         std::cout << "Creating iterator" << endl;
         codes_handle* h = codes_handle_new_from_file(0, fin, PRODUCT_GRIB, &err);
+        std::cout << "handle is " << h << std::endl;
+        if(h == nullptr || h == NULL || err != 0) {
+
+            std::ostringstream oss;
+            oss << "Error calling codes_handle_new_from_file got error code " << err
+             << " whilst processing file " << filepath;
+
+            throw GribException (oss.str());
+        }
         auto m = new GribMessage(this, h, 0l);
         return Iterator(this, m, m_endMessage);
     } else {
@@ -483,4 +493,8 @@ arrow::Result<std::shared_ptr<arrow::Array>> GribReader::createSurrogateKeyCol(l
 
 void GribReader::setExhausted(bool status) {
     isExhausted = status;
+}
+
+std::string GribReader::getFilePath() {
+    return filepath;
 }
