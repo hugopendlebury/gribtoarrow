@@ -29,6 +29,7 @@ class TestLocations:
         assert 'modelNo' in df.columns
         assert 'lat' in df.columns
         assert 'lon' in df.columns
+        assert 'surrogate_key' in df.columns
         assert 'distance' in df.columns
         assert 'nearestlatitude' in df.columns
         assert 'nearestlongitude' in df.columns
@@ -89,6 +90,7 @@ class TestLocations:
         print(f"YO I got the following columns {columns}")
         assert 'lat' in columns        
         assert 'lon' in columns
+        assert 'surrogate_key' in columns
         assert 'name' in columns
         assert 'awesome_factor' in columns
         assert 'beer' in columns

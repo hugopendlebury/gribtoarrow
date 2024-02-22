@@ -49,9 +49,49 @@ GribReader::GribReader(string filepath) : filepath(filepath) {
 
 GribReader GribReader::withLocations(std::shared_ptr<arrow::Table> locations) {
     //TODO - add some validation
+    validateLocationFields(locations, " passed conversions via arrow");
+    locations = GribReader::enrichLocationsWithSurrogateKey(locations);
+    locations = castTableFields(locations, " passed conversions via arrow",  getLocationFieldDefinitions());
     this->shared_locations = locations;
     return *this;
 }
+
+void GribReader::validateLocationFields(std::shared_ptr<arrow::Table> locations, std::string table_name) {
+    auto table = locations.get();
+    auto columns = table->ColumnNames();
+    std::set<std::string> columnsSet(std::make_move_iterator(columns.begin()),
+              std::make_move_iterator(columns.end()));
+
+
+    std::vector<std::string> required_columns = {"lat", 
+                                                "lon"};
+
+    for (auto col : required_columns) {
+        const bool is_in = columnsSet.find(col) != columnsSet.end();
+        if (!is_in){
+            std::string errDetail = "Column " + col + " is not present in schema of table " + table_name;
+            throw InvalidSchemaException(errDetail);
+        }
+    }
+}
+
+std::shared_ptr<arrow::Table> GribReader::enrichLocationsWithSurrogateKey(std::shared_ptr<arrow::Table> locations) {
+        //Append an additional column to the table called surrogate key
+    auto numberOfRows = locations.get()->num_rows();
+    auto surrogate_columns = createSurrogateKeyCol(numberOfRows);
+    auto skField = arrow::field("surrogate_key", arrow::uint16());
+    auto chunkedArray = std::make_shared<arrow::ChunkedArray>(arrow::ChunkedArray(surrogate_columns.ValueOrDie()));
+    auto locationsResult = locations.get()->AddColumn(0, skField, chunkedArray);
+    if (!locationsResult.ok()) {
+        std::string errDetails = "Error adding surrogate key " 
+                " " + locationsResult.status().message();
+            throw UnableToCreateArrowTableReaderException(errDetails);
+        
+    } 
+    return locationsResult.ValueOrDie();
+
+}
+
 
 GribReader GribReader::withRepeatableIterator(bool repeatable) {
     //TODO - add some validation
@@ -59,8 +99,8 @@ GribReader GribReader::withRepeatableIterator(bool repeatable) {
     return *this;
 }
 
-void GribReader::validateConversionFields(std::shared_ptr<arrow::Table> locations, std::string table_name) {
-    auto table = locations.get();
+void GribReader::validateConversionFields(std::shared_ptr<arrow::Table> conversions, std::string table_name) {
+    auto table = conversions.get();
     auto columns = table->ColumnNames();
     std::set<std::string> columnsSet(std::make_move_iterator(columns.begin()),
               std::make_move_iterator(columns.end()));
@@ -107,19 +147,20 @@ arrow::ArrayVector* GribReader::castColumn(std::shared_ptr<arrow::Table> locatio
     return chunkVector;
 }
 
-std::shared_ptr<arrow::Table> GribReader::castConversionFields(std::shared_ptr<arrow::Table> locations, std::string table_name) {
+std::shared_ptr<arrow::Table> GribReader::castTableFields(std::shared_ptr<arrow::Table> arrow_table,
+                                                             std::string table_name,
+                                                             std::unordered_map<std::string, std::shared_ptr<arrow::DataType>> fieldTypes) {
     
     //Ok this is a PITA - Although there is a .swap method of a column it doesn't work if we want to 
     //swap the column with a new data type or had an issue with 
     //TODO see if we can use swap - was it a problem with mixing datatypes which was resolved on 3rd Feb ?
     //trying to remove and add wasn't working either so we basically create a new table
 
-    auto table = locations.get();
+    auto table = arrow_table.get();
     
     std::vector<std::shared_ptr<arrow::ChunkedArray>> resultsArray;
     arrow::FieldVector fieldVector;
 
-    auto fieldTypes = getConversionFieldDefinitions();
                                    
     for (auto colDetails: fieldTypes) {
         
@@ -127,7 +168,7 @@ std::shared_ptr<arrow::Table> GribReader::castConversionFields(std::shared_ptr<a
         auto colType = colDetails.second;
         fieldVector.push_back(arrow::field(colName, colType));
         
-        auto chunkVector = castColumn(locations, colName, colType);
+        auto chunkVector = castColumn(arrow_table, colName, colType);
         auto col = table->GetColumnByName(colName).get();
         auto chunkedArrayResult = col->Make(*chunkVector, colType);
         if(chunkedArrayResult.ok()) {
@@ -149,19 +190,9 @@ GribReader GribReader::withLocations(std::string path){
 
     //Reads a CSV  with the location data and enriches it with a row_number / surrogate_key
 
-
     std::shared_ptr<arrow::Table> locations = getTableFromCsv(path, arrow::csv::ConvertOptions::Defaults());
+    return GribReader::withLocations(locations);
 
-    //Append an additional column to the table called surrogate key
-    auto numberOfRows = locations.get()->num_rows();
-    auto surrogate_columns = createSurrogateKeyCol(numberOfRows);
-    auto skField = arrow::field("surrogate_key", arrow::uint16());
-    auto chunkedArray = std::make_shared<arrow::ChunkedArray>(arrow::ChunkedArray(surrogate_columns.ValueOrDie()));
-    locations = locations.get()->AddColumn(0, skField, chunkedArray).ValueOrDie();
-
-
-    this->shared_locations = locations;
-    return *this;
 }
 
 enum conversionMethods {
@@ -198,7 +229,7 @@ GribReader GribReader::withConversions(std::shared_ptr<arrow::Table> conversions
     //the table should contain 2 columns "lat" and "lon"
     validateConversionFields(conversions, " passed conversions via arrow");
     std::cout << "Fields validated" << std::endl;
-    conversions = castConversionFields(conversions, " passed conversions via arrow");
+    conversions = castTableFields(conversions, " passed conversions via arrow",  getConversionFieldDefinitions());
         
     auto rowConversion = ColumnarTableToVector(conversions);
     

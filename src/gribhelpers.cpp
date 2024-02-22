@@ -21,3 +21,13 @@ std::unordered_map<std::string, std::shared_ptr<arrow::DataType>>  getConversion
     return fieldTypes;
 
 }
+
+std::unordered_map<std::string, std::shared_ptr<arrow::DataType>>  getLocationFieldDefinitions() {
+
+    std::unordered_map<std::string, std::shared_ptr<arrow::DataType>> fieldTypes;
+    fieldTypes.emplace(make_pair("lat", arrow::float64()));
+    fieldTypes.emplace(make_pair("lon", arrow::float64()));
+
+    return fieldTypes;
+
+}
