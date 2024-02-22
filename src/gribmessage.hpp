@@ -77,8 +77,8 @@ class GribMessage
         std::unique_ptr<GridArea> getGridArea();
         std::vector<double> colToVector(std::shared_ptr<arrow::ChunkedArray> columnArray);
         GribLocationData* getLocationData(std::unique_ptr<GridArea> gridArea);
-        codes_handle* h;
         GribReader* _reader;
+        codes_handle* h;
         long _message_id;
    
 };
