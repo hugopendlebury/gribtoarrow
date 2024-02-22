@@ -29,7 +29,6 @@ class GribMessage
                     codes_handle* handle, 
                     long message_id);
 
-        codes_handle* h;
         long getGribMessageId();
         double getLatitudeOfFirstPoint();
         double getLongitudeOfFirstPoint();
@@ -78,9 +77,9 @@ class GribMessage
         std::unique_ptr<GridArea> getGridArea();
         std::vector<double> colToVector(std::shared_ptr<arrow::ChunkedArray> columnArray);
         GribLocationData* getLocationData(std::unique_ptr<GridArea> gridArea);
+        codes_handle* h;
         GribReader* _reader;
         long _message_id;
-        long gridDefinitionTemplateNumber;
    
 };
 

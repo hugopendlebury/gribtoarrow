@@ -1,10 +1,3 @@
-import polars as pl
-import pytest
-import os
-import sys
-import pyarrow
-from functools import reduce
-
 class TestIteration:
 
     def get_iterator_count(self, reader):

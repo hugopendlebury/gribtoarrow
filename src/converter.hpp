@@ -8,8 +8,9 @@ class Converter
 
     
 public:
-    double conversionValue;
+
     std::function<arrow::Result<arrow::Datum>(arrow::Datum, arrow::Datum)> conversionFunc;
+    double conversionValue;
 
     Converter(std::function<arrow::Result<arrow::Datum>(arrow::Datum, arrow::Datum)> conversionFunc, double conversionValue);
  

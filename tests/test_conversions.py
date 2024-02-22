@@ -1,7 +1,6 @@
 import polars as pl
 import pytest
 import os
-import sys
 import pyarrow as pa
 
 class TestConversions:

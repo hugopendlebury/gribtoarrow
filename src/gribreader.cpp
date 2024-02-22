@@ -49,9 +49,9 @@ GribReader::GribReader(string filepath) : filepath(filepath) {
 
 GribReader GribReader::withLocations(std::shared_ptr<arrow::Table> locations) {
     //TODO - add some validation
-    validateLocationFields(locations, " passed conversions via arrow");
+    validateLocationFields(locations, " passed locations via arrow");
     locations = enrichLocationsWithSurrogateKey(locations);
-    locations = castTableFields(locations, " passed conversions via arrow",  getLocationFieldDefinitions());
+    locations = castTableFields(locations, " passed locations via arrow",  getLocationFieldDefinitions());
     this->shared_locations = locations;
     return *this;
 }
@@ -79,7 +79,7 @@ std::shared_ptr<arrow::Table> GribReader::enrichLocationsWithSurrogateKey(std::s
         //Append an additional column to the table called surrogate key
 
     auto locationsTable = locations.get();
-    auto columns = locations.get()->ColumnNames();
+    auto columns = locationsTable->ColumnNames();
     std::set<std::string> columnsSet(std::make_move_iterator(columns.begin()),
               std::make_move_iterator(columns.end()));
 
@@ -87,11 +87,11 @@ std::shared_ptr<arrow::Table> GribReader::enrichLocationsWithSurrogateKey(std::s
 
     if (!hasSurrogateKey) {
         std::cout << "Enriching with surrogate_key field " << std::endl;
-        auto numberOfRows = locations.get()->num_rows();
+        auto numberOfRows = locationsTable->num_rows();
         auto surrogate_columns = createSurrogateKeyCol(numberOfRows);
         auto skField = arrow::field("surrogate_key", arrow::uint16());
         auto chunkedArray = std::make_shared<arrow::ChunkedArray>(arrow::ChunkedArray(surrogate_columns.ValueOrDie()));
-        auto locationsResult = locations.get()->AddColumn(0, skField, chunkedArray);
+        auto locationsResult = locationsTable->AddColumn(0, skField, chunkedArray);
         if (!locationsResult.ok()) {
             std::string errDetails = "Error adding surrogate key " 
                     " " + locationsResult.status().message();
@@ -255,7 +255,6 @@ GribReader GribReader::withConversions(std::string conversionsPath) {
 
 GribReader GribReader::withConversions(std::shared_ptr<arrow::Table> conversions) {
     cout << "Setting conversions" << endl;
-    auto conv = conversions.get();
 
     //the table should contain 2 columns "lat" and "lon"
     validateConversionFields(conversions, " passed conversions via arrow");
@@ -368,7 +367,6 @@ std::optional<GribLocationData*> GribReader::getLocationDataFromCache(std::uniqu
 
 GribLocationData* GribReader::addLocationDataToCache(std::unique_ptr<GridArea>& area, GribLocationData* locationData) {
 
-    auto numberOfPoints = locationData->numberOfPoints;
     auto a = *area.get();
     location_cache.emplace(a, locationData);
     return locationData;
@@ -429,7 +427,7 @@ std::shared_ptr<arrow::Table> GribReader::getLocations(std::unique_ptr<GridArea>
             
     }
 
-    auto required_locations = locations_in_area.find(ga);
+    //auto required_locations = locations_in_area.find(ga);
     auto matched =  locations_in_area[ga];
     return matched;
 }

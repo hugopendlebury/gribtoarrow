@@ -53,7 +53,6 @@ public:
         bool isRepeatable = false;
         bool isExhausted  = false;
         std::shared_ptr<arrow::Table> shared_locations;
-        arrow::Table*       conversions = NULLPTR;
         std::unordered_map<GridArea, std::shared_ptr<arrow::Table>> locations_in_area;
         std::unordered_map<GridArea, GribLocationData*> location_cache;
         std::unordered_map<int64_t, Converter*> conversion_funcs;

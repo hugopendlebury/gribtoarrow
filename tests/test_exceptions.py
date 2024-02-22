@@ -1,8 +1,6 @@
 import polars as pl
 import pytest
 import os
-import sys
-import pyarrow
 
 class TestExceptions:
     def test_incorrect_grib_filePath(self, resource):

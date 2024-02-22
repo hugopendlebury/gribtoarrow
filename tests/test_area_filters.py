@@ -1,8 +1,4 @@
 import polars as pl
-import pytest
-import os
-import sys
-import pyarrow
 
 class TestLocations:
     def test_find_nearest(self, resource):

@@ -1,9 +1,4 @@
 import polars as pl
-import pytest
-import os
-import sys
-import pyarrow
-
 
 class TestColumns():
     def test_column_addition_to_df(self, resource):
