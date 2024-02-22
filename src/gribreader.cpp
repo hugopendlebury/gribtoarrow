@@ -482,3 +482,7 @@ arrow::Result<std::shared_ptr<arrow::Array>> GribReader::createSurrogateKeyCol(l
     return arrayValues;
 
  }
+
+void GribReader::setExhausted(bool status) {
+    isExhausted = status;
+}

@@ -25,6 +25,7 @@ Iterator& Iterator::operator++() {
     codes_handle* h = codes_handle_new_from_file(0, reader->fin, PRODUCT_GRIB, &err);
     if (h == NULL) {
         m_ptr = m_lastMessage;
+        reader->setExhausted(true);
     } else {
         message_id++;
         auto m = new GribMessage(
