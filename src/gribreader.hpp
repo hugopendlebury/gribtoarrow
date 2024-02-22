@@ -61,7 +61,7 @@ public:
         std::shared_ptr<arrow::Table> getTableFromCsv(std::string path, arrow::csv::ConvertOptions convertOptions);
         arrow::Result<std::shared_ptr<arrow::Array>> createSurrogateKeyCol(long numberOfRows);
         void validateConversionFields(std::shared_ptr<arrow::Table> conversions, std::string table_name);
-        std::shared_ptr<arrow::Table> GribReader::castTableFields(std::shared_ptr<arrow::Table> arrow_table,
+        std::shared_ptr<arrow::Table> castTableFields(std::shared_ptr<arrow::Table> arrow_table,
                                                              std::string table_name,
                                                              std::unordered_map<std::string, std::shared_ptr<arrow::DataType>> fieldTypes);
         void validateLocationFields(std::shared_ptr<arrow::Table> locations, std::string table_name) ;
