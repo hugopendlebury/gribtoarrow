@@ -1,4 +1,5 @@
 import datetime
+import math
 
 class TestFilterMessageId:
     def test_attributes(self, resource):
@@ -43,3 +44,17 @@ class TestFilterMessageId:
         assert -123 == message.getNumericParameterOrDefault("paramid", -123)
         #key doesn't exist and default specified as namedArg
         assert -123 == message.getNumericParameterOrDefault("paramid", defaultValue=-123)
+        #key exists should return value
+        assert 90.0 == message.getDoubleParameterOrDefault("latitudeOfFirstGridPointInDegrees")
+        #key doesn't exist should return value (NaN)
+        result = message.getDoubleParameterOrDefault("latitudeOfFirstGridPointInDegreesPleaseBoss")
+        assert(math.isnan(result) == True)
+        #key doesn't exist default specified should return requested default
+        result = message.getDoubleParameterOrDefault("latitudeOfFirstGridPointInDegreesPleaseBoss", 99.99)
+        assert round(result,2) == round(99.99,2)
+        assert "gh" == message.getStringParameterOrDefault("shortName")
+        #String key does exist should return default (empty string)
+        assert "" == message.getStringParameterOrDefault("elChapo")
+        #String key does exist should return user specified key
+        assert "shorty" == message.getStringParameterOrDefault("elChapo", "shorty")
+

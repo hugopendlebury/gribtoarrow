@@ -1,6 +1,7 @@
 #ifndef GRIB_MESSAGE_H_INCLUDED
 #define GRIB_MESSAGE_H_INCLUDED
 
+#include <cmath>
 #include <utility>
 #include <memory>
 #include <iostream>
@@ -63,6 +64,8 @@ class GribMessage
         bool iScansNegatively();
         bool jScansPositively();
         long getNumericParameterOrDefault(string parameterName, long defaultValue = -9999);
+        double getDoubleParameterOrDefault(string parameterName, double defaultValue = std::nan(""));
+        string getStringParameterOrDefault(string parameterName, string defaultValue = "");
         std::shared_ptr<arrow::Table> getData();
         std::shared_ptr<arrow::Table> getDataWithLocations();
         ~ GribMessage();

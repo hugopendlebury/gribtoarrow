@@ -265,6 +265,24 @@ using namespace std;
         return short_name_std;
     }
 
+    string GribMessage::getStringParameterOrDefault(string parameterName, string defaultValue) {
+        size_t parameterNameLength;
+        auto parameterNameC = parameterName.c_str();
+        auto err = codes_get_length(h, parameterNameC, &parameterNameLength);
+        if (err !=0) {
+            return defaultValue;
+        }
+        auto short_name = new char[parameterNameLength];
+        err = codes_get_string(h, parameterNameC, short_name, &parameterNameLength);
+        if (err == 0) {
+            string short_name_std = short_name;
+            delete [] short_name;
+            return short_name_std;
+        }
+        return defaultValue;
+
+    }
+
     long GribMessage::getNumericParameter(string parameterName) {
         long parameterId;
         auto err = codes_get_long(h, parameterName.c_str(), &parameterId);
@@ -282,6 +300,12 @@ using namespace std;
     long GribMessage::getNumericParameterOrDefault(string parameterName, long defaultValue) {
         long parameterId = defaultValue;
         auto ret = codes_get_long(h, parameterName.c_str(), &parameterId);   
+        return ret == 0 ? parameterId : defaultValue;
+    }
+
+    double GribMessage::getDoubleParameterOrDefault(string parameterName, double defaultValue) {
+        double parameterId;
+        auto ret = codes_get_double(h, parameterName.c_str(), &parameterId);
         return ret == 0 ? parameterId : defaultValue;
     }
 

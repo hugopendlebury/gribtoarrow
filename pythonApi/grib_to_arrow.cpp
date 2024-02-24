@@ -7,6 +7,7 @@
 #include "../src/exceptions/invalidcsvexception.hpp"
 #include "../src/exceptions/invalidschemaexception.hpp"
 #include "../src/exceptions/gribexception.hpp"
+#include <cmath>
 
 //#define USE_CMAKE
 
@@ -208,6 +209,18 @@ PYBIND11_MODULE(gribtoarrow, m)
         .def("getNumericParameterOrDefault", &GribMessage::getNumericParameterOrDefault, 
                 py::arg(nullptr), 
                 py::arg("defaultValue") = -9999
+                ,pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
+            Get the key passed to it or if the key is missing returns the user supplied default value              
+        )EOL") 
+        .def("getDoubleParameterOrDefault", &GribMessage::getDoubleParameterOrDefault, 
+                py::arg(nullptr), 
+                py::arg("defaultValue") = std::nan("")
+                ,pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
+            Get the key passed to it or if the key is missing returns the user supplied default value              
+        )EOL") 
+        .def("getStringParameterOrDefault", &GribMessage::getStringParameterOrDefault, 
+                py::arg(nullptr), 
+                py::arg("defaultValue") = ""
                 ,pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
             Get the key passed to it or if the key is missing returns the user supplied default value              
         )EOL") 
