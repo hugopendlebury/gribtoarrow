@@ -12,8 +12,8 @@
 #include "gribmessage.hpp"
 #include "arrowutils.hpp"
 #include "exceptions/gribexception.hpp"
-
-
+#include <type_traits>
+#include <limits>
 
 using namespace std;
 
@@ -307,6 +307,49 @@ using namespace std;
         double parameterId;
         auto ret = codes_get_double(h, parameterName.c_str(), &parameterId);
         return ret == 0 ? parameterId : defaultValue;
+    }
+
+    template <typename T> 
+    T GribMessage::tryGetParameter(string parameterName, T defaultValue) {
+
+        if constexpr (std::is_floating_point_v<T>) {
+            return getDoubleParameterOrDefault(parameterName, defaultValue);
+        } 
+
+        if constexpr (std::is_integral_v<T>) {
+            return getNumericParameterOrDefault(parameterName, defaultValue);
+        }
+
+        getStringParameterOrDefault(parameterName, defaultValue);
+
+    }
+
+    template <typename T> 
+    T GribMessage::tryGetKey(string parameterName) {
+
+        auto dblDefault = std::nan("");
+        long maxLong {std::numeric_limits<long>::max()};
+        auto stringDefault = "InTheBlueRidgeMountainsOfViriginaOnTheTrailOfTheLonesomePine";
+
+        auto doubleResult = getDoubleParameterOrDefault(parameterName, dblDefault);
+        if (doubleResult != dblDefault) {
+            //we got the result
+            return doubleResult;
+        }
+        //it wasn't a double or the key doesn't exist
+        auto longResult = getNumericParameterOrDefault(parameterName, maxLong);
+        if (longResult != maxLong) {
+            //we got the result
+            return longResult;
+        }
+
+        auto stringResult = getStringParameterOrDefault(parameterName, stringDefault);
+        if (stringResult != stringDefault) {
+            return stringResult;
+        }
+
+        return nullptr;
+
     }
 
     double GribMessage::getDoubleParameter(string parameterName) {

@@ -66,6 +66,13 @@ class GribMessage
         long getNumericParameterOrDefault(string parameterName, long defaultValue = -9999);
         double getDoubleParameterOrDefault(string parameterName, double defaultValue = std::nan(""));
         string getStringParameterOrDefault(string parameterName, string defaultValue = "");
+
+        template <typename T> 
+        T tryGetParameter(string parameterName, T defaultValue = nullptr);
+
+        template <typename T> 
+        T tryGetKey(string parameterName);
+
         std::shared_ptr<arrow::Table> getData();
         std::shared_ptr<arrow::Table> getDataWithLocations();
         ~ GribMessage();
