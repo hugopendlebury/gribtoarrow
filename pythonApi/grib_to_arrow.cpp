@@ -205,6 +205,12 @@ PYBIND11_MODULE(gribtoarrow, m)
         .def("getEditionNumber", &GribMessage::getEditionNumber, pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
             Return if the grib version e.g. 1/2              
         )EOL") 
+        .def("getNumericParameterOrDefault", &GribMessage::getNumericParameterOrDefault, 
+                py::arg(nullptr), 
+                py::arg("defaultValue") = -9999
+                ,pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
+            Get the key passed to it or if the key is missing returns the user supplied default value              
+        )EOL") 
         .doc() = R"EOL(
             This class provides the ability to access attributes such as the parameterId  
 

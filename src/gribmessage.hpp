@@ -62,6 +62,7 @@ class GribMessage
         long getGridDefinitionTemplateNumber();
         bool iScansNegatively();
         bool jScansPositively();
+        long getNumericParameterOrDefault(string parameterName, long defaultValue = -9999);
         std::shared_ptr<arrow::Table> getData();
         std::shared_ptr<arrow::Table> getDataWithLocations();
         ~ GribMessage();
@@ -72,7 +73,6 @@ class GribMessage
 
         string getStringParameter(string parameterName);
         long getNumericParameter(string parameterName);
-        long getNumericParameterOrDefault(string parameterName, long defaultValue);
         double getDoubleParameter(string parameterName);
         std::unique_ptr<GridArea> getGridArea();
         std::vector<double> colToVector(std::shared_ptr<arrow::ChunkedArray> columnArray);

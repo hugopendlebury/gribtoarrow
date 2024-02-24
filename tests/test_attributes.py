@@ -29,3 +29,17 @@ class TestFilterMessageId:
         assert message.jScansPositively() is False
         assert message.getDataType() == "pf"
 
+    def test_default_missingKeys(self, resource):
+        from gribtoarrow import GribReader
+
+        reader = GribReader(str(resource) + "/gep01.t00z.pgrb2a.0p50.f003")
+
+        message = next(iter(reader))
+        #key exists so should get value
+        assert 156 == message.getNumericParameterOrDefault("paramId")
+        #key doesn't exist (deliberate typo and no default specified)
+        assert -9999 == message.getNumericParameterOrDefault("paramid")
+        #key doesn't exist and default specified
+        assert -123 == message.getNumericParameterOrDefault("paramid", -123)
+        #key doesn't exist and default specified as namedArg
+        assert -123 == message.getNumericParameterOrDefault("paramid", defaultValue=-123)
