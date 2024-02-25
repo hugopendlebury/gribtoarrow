@@ -224,6 +224,10 @@ PYBIND11_MODULE(gribtoarrow, m)
                 ,pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
             Get the key passed to it or if the key is missing returns the user supplied default value              
         )EOL") 
+        .def("tryGetKey", &GribMessage::tryGetKey
+                ,pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
+            Get the key passed to it or if the key is missing returns None             
+        )EOL") 
         .doc() = R"EOL(
             This class provides the ability to access attributes such as the parameterId  
 

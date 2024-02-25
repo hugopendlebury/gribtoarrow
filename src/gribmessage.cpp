@@ -306,6 +306,7 @@ using namespace std;
     double GribMessage::getDoubleParameterOrDefault(string parameterName, double defaultValue) {
         double parameterId;
         auto ret = codes_get_double(h, parameterName.c_str(), &parameterId);
+        std::cout << "ret is " << ret << std::endl;
         return ret == 0 ? parameterId : defaultValue;
     }
 
@@ -324,31 +325,55 @@ using namespace std;
 
     }
 
-    template <typename T> 
-    T GribMessage::tryGetKey(string parameterName) {
+    std::variant<long, std::string, double, nullptr_t> GribMessage::tryGetKey(string parameterName) {
 
         auto dblDefault = std::nan("");
         long maxLong {std::numeric_limits<long>::max()};
         auto stringDefault = "InTheBlueRidgeMountainsOfViriginaOnTheTrailOfTheLonesomePine";
 
-        auto doubleResult = getDoubleParameterOrDefault(parameterName, dblDefault);
-        if (doubleResult != dblDefault) {
-            //we got the result
-            return doubleResult;
-        }
-        //it wasn't a double or the key doesn't exist
+        std::cout << "Getting key " << parameterName << std::endl;
+
+        
         auto longResult = getNumericParameterOrDefault(parameterName, maxLong);
         if (longResult != maxLong) {
-            //we got the result
-            return longResult;
+            //we got a result but it's possibly a string
+            if (longResult == 0) {
+                auto stringResult = getStringParameterOrDefault(parameterName, stringDefault);
+                std::cout << "Value of string is " << stringResult << std::endl;
+                if(stringResult == stringDefault) {
+                    std::cout << "returning long" << longResult << std::endl;
+                    return {longResult};
+                } 
+                return {stringResult};
+            }
+            return {longResult};
         }
+
+        //it wasn't a double or the key doesn't exist
+        auto doubleResult = getDoubleParameterOrDefault(parameterName, dblDefault);
+        if (!std::isnan(doubleResult)) {
+            std::cout << "Value of double is " << doubleResult << std::endl;
+            //its not a double but it might be a string key
+            auto stringResult = getStringParameterOrDefault(parameterName, stringDefault);
+            std::cout << "Value of string is " << stringResult << std::endl;
+            if(stringResult == stringDefault) {
+                std::cout << "returning double" << doubleResult << std::endl;
+                return {doubleResult};
+            } 
+            std::cout << "returning string" << stringResult << std::endl;
+            return {stringResult};
+        }
+
 
         auto stringResult = getStringParameterOrDefault(parameterName, stringDefault);
         if (stringResult != stringDefault) {
-            return stringResult;
+            std::cout << "its a string " << std::endl;
+            return {stringResult};
         }
 
-        return nullptr;
+
+        std::cout << "No result found for key " << parameterName << std::endl;
+        return {nullptr};
 
     }
 

@@ -1,5 +1,6 @@
 import datetime
 import math
+import polars as pl
 
 class TestFilterMessageId:
     def test_attributes(self, resource):
@@ -57,4 +58,43 @@ class TestFilterMessageId:
         assert "" == message.getStringParameterOrDefault("elChapo")
         #String key does exist should return user specified key
         assert "shorty" == message.getStringParameterOrDefault("elChapo", "shorty")
+
+    def test_tryGetKey(self, resource):
+        from gribtoarrow import GribReader
+
+        # Locations are Canary Wharf,Manchester & kristiansand
+        locations = pl.DataFrame(
+            {"lat": [51.5054, 53.4808, 58.1599], "lon": [-0.027176, 2.2426, 8.0182]}
+        ).to_arrow()
+
+        reader = GribReader(str(resource) + "/gep01.t00z.pgrb2a.0p50.f003").withLocations(locations)
+
+        message = next(iter(reader))
+        #key exists so should get value
+        assert 156 == message.tryGetKey("paramId")
+        #key doesn't exist (deliberate typo and no default specified)
+        assert None == message.tryGetKey("paramid")
+        #key exists should return value
+        assert 90.0 == message.tryGetKey("latitudeOfFirstGridPointInDegrees")
+        #key doesn't exist should return value (NaN)
+        assert None == message.tryGetKey("latitudeOfFirstGridPointInDegreesPleaseBoss")
+        assert "gh" == message.tryGetKey("shortName")
+        #String key does exist should return None
+        assert None == message.tryGetKey("elChapo")
+
+        #The next example it to show how we can use tryGetKey (in c# you can return a bool and use ref)
+        #from python 3.8 we can do this with walrus
+        messages = []
+        for message in reader:
+            msg = pl.from_arrow(message.getDataWithLocations()).with_columns([
+                #We know this columns doesn't exist but want a different default
+                pl.lit(key).alias("Shorty") if(key := message.tryGetKey("elChapo")) else pl.lit("sinaloa").alias("Shorty")
+            ])
+            messages.append(msg)
+    
+        df : pl.DataFrame = pl.concat(messages)
+        assert all(x == "sinaloa" for x in df["Shorty"].to_list())
+        
+
+        
 

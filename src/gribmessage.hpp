@@ -70,8 +70,9 @@ class GribMessage
         template <typename T> 
         T tryGetParameter(string parameterName, T defaultValue = nullptr);
 
-        template <typename T> 
-        T tryGetKey(string parameterName);
+        //template <typename T> 
+        //T tryGetKey(string parameterName);
+        std::variant<long, std::string, double, nullptr_t> tryGetKey(string parameterName);
 
         std::shared_ptr<arrow::Table> getData();
         std::shared_ptr<arrow::Table> getDataWithLocations();
