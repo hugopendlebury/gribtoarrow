@@ -106,6 +106,11 @@ std::shared_ptr<arrow::Table> GribReader::enrichLocationsWithSurrogateKey(std::s
 
 }
 
+GribReader GribReader::withEnabledStationFiltering(bool enableFiltering) {
+    this->filteringEnabled = enableFiltering;
+    return *this;
+}
+
 
 GribReader GribReader::withRepeatableIterator(bool repeatable) {
     this->isRepeatable = repeatable;
@@ -382,6 +387,10 @@ GribLocationData* GribReader::addLocationDataToCache(std::unique_ptr<GridArea>& 
 }
 
 std::shared_ptr<arrow::Table> GribReader::getLocations(std::unique_ptr<GridArea>& area) {
+
+    if (!filteringEnabled) {
+        return shared_locations;
+    }
 
     auto ga = *area.get();
 

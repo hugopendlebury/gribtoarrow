@@ -50,6 +50,13 @@ PYBIND11_MODULE(gribtoarrow, m)
             ----------
             filepath (str): A string containing the full path of the grib file                  
         )EOL") // constructor
+        .def("withEnabledStationFiltering", &GribReader::withEnabledStationFiltering, pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
+            Enables location data filtering to be disabled
+
+            Parameters
+            ----------
+            bool - If True filtering will be done based on the location data and the coorindates of the message                 
+        )EOL") 
         .def("withLocations", py::overload_cast<std::shared_ptr<arrow::Table>>(&GribReader::withLocations), pybind11::call_guard<pybind11::gil_scoped_release>(), R"EOL(
             Adds locations which will be filtered in each message. 
 

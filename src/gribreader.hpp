@@ -34,6 +34,7 @@ public:
     GribReader withConversions(std::shared_ptr<arrow::Table> conversions);
     GribReader withConversions(std::string path);
     GribReader withRepeatableIterator(bool repeatable);
+    GribReader withEnabledStationFiltering(bool enableFiltering);
 
     Iterator begin();
     Iterator end();
@@ -54,6 +55,7 @@ public:
         string filepath;
         int err             = 0;
         bool isRepeatable = false;
+        bool filteringEnabled = true;
         bool isExhausted  = false;
         std::shared_ptr<arrow::Table> shared_locations;
         std::unordered_map<GridArea, std::shared_ptr<arrow::Table>> locations_in_area;
