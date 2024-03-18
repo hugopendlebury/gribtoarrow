@@ -102,13 +102,16 @@ using namespace std;
 
         //stringstream ss(date);
         strptime(date.c_str(), "%Y%m%d", &tm);
-        //ss >> get_time(&tm, "%Y%m%d");
-        
-        return std::chrono::system_clock::from_time_t(std::mktime(&tm));
+        auto forecastTime = getTimeNumeric() / 100;
+        auto chronoDate =  std::chrono::system_clock::from_time_t(std::mktime(&tm));
+        chronoDate += std::chrono::hours(forecastTime);
+        return chronoDate;
+
     }
 
     chrono::system_clock::time_point GribMessage::getObsDate() {
         auto dt = getChronoDate();
+
         //TODO - this is flakey but follows current logic
         //amend to use the stepUnit and not assume all steps are unit "h"
         auto hours = getStep();
