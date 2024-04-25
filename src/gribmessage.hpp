@@ -81,7 +81,6 @@ class GribMessage
 
 
     private:
-
         string getStringParameter(string parameterName);
         long getNumericParameter(string parameterName);
         double getDoubleParameter(string parameterName);
@@ -91,6 +90,9 @@ class GribMessage
         GribReader* _reader;
         codes_handle* h;
         long _message_id;
+        long gribVersion = 0;
+        double longitudeOfFirstGridPointInDegrees = 0.0;
+        double longitudeOfLastGridPointInDegrees = 0.0;
    
 };
 

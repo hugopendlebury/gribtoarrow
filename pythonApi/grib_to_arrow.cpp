@@ -7,6 +7,8 @@
 #include "../src/exceptions/invalidcsvexception.hpp"
 #include "../src/exceptions/invalidschemaexception.hpp"
 #include "../src/exceptions/gribexception.hpp"
+#include "../src/exceptions/memoryallocationexception.hpp"
+#include "../src/exceptions/codesgetdoublevaluesasarrayexception.hpp"
 #include <cmath>
 
 //#define USE_CMAKE
@@ -15,7 +17,6 @@
     #include "../pybind11/include/pybind11/pybind11.h"
     #include "../pybind11/include/pybind11/stl.h" 
     #include "../pybind11/include/pybind11/chrono.h" 
-
 #else
     #include <pybind11/pybind11.h>
     #include <pybind11/stl.h>
@@ -40,6 +41,8 @@ PYBIND11_MODULE(gribtoarrow, m)
     py::register_exception<ArrowGenericException>(m, "ArrowGenericException");
     py::register_exception<InvalidSchemaException>(m, "InvalidSchemaException");
     py::register_exception<GribException>(m, "GribException");
+    py::register_exception<MemoryAllocationException>(m, "MemoryAllocationException");
+    py::register_exception<CodesGetDoubleValuesAsArrayException>(m, "CodesGetDoubleValuesAsArrayException");
 
     py::module::import("pyarrow");
     py::class_<GribReader>(m, "GribReader")

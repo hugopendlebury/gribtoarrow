@@ -12,6 +12,7 @@
 #include "gribmessage.hpp"
 #include "arrowutils.hpp"
 #include "exceptions/gribexception.hpp"
+#include "exceptions/memoryallocationexception.hpp"
 #include <type_traits>
 #include <limits>
 
@@ -23,12 +24,13 @@ using namespace std;
                              long message_id) : 
                                         _reader(reader), 
                                         h(codes_handle),
-                                        _message_id(message_id) 
+                                        _message_id(message_id)
                                         { 
-        //auto gd = this->getGridDefinitionTemplateNumber();
-       // std::cout << "Template number is " << gd << std::endl;
-        //gridDefinitionTemplateNumber = 10l;
-        //gridDefinitionTemplateNumber = this->getGridDefinitionTemplateNumber();
+        if (codes_handle != NULL && codes_handle != NULLPTR) {
+            gribVersion = this->getEditionNumber();  
+            longitudeOfFirstGridPointInDegrees = this->getLongitudeOfFirstPoint();
+            longitudeOfLastGridPointInDegrees = this->getLongitudeOfLastPoint(); 
+        }
     }
 
     long GribMessage::getGribMessageId() {
@@ -49,8 +51,9 @@ using namespace std;
         return name;
     }
 
+
     double GribMessage::getLatitudeOfFirstPoint() {
-        return getDoubleParameter("latitudeOfFirstGridPointInDegrees");
+        return getDoubleParameter("latitudeOfFirstGridxPointInDegrees");
     }
 
     double GribMessage::getLongitudeOfFirstPoint() {
@@ -66,20 +69,39 @@ using namespace std;
     }
 
     double GribMessage::getStandardisedLongitudeOfFirstPoint() {
-        //TODO UNDERSTAND MORE ABOUT HOW THIS CHANGES
-        auto longitude = this->getLongitudeOfFirstPoint();
-        if (longitude == 0) {
-            longitude -= 180;
-        }
 
+        auto longitude = longitudeOfFirstGridPointInDegrees;
+
+        cout << "longitudeOfFirstPoint = " << longitude << endl; 
+        //Grib version 2 always has longitude as positive values
+        if (gribVersion == 2l) {
+            if (longitude >= 180 && longitude <= 360.0) {
+                longitude = longitude - 360;
+            }
+            else {
+                longitude = longitude - 180;
+            } 
+        }
+        cout << "converted longitudeOfFirstPoint = " << longitude << endl; 
         return longitude;
     }
     double GribMessage::getStandardisedLongitudeOfLastPoint() {
-        //TODO UNDERSTAND MORE ABOUT HOW THIS CHANGES
+
+
         auto longitude = this->getLongitudeOfLastPoint();
-        if (longitude == 359.5) {
-            longitude -= 180;
+
+        cout << "longitudeOfLastPoint = " << longitude << endl; 
+
+        if (gribVersion == 2l) {
+            if (longitudeOfFirstGridPointInDegrees >= 180 && longitudeOfFirstGridPointInDegrees <= 360.0) {
+                longitude = longitude - 360;
+            }
+            else {
+                longitude = longitude - 180;
+            } 
         }
+
+        cout << "converted longitudeOfLastPoint = " << longitude << endl;
 
         return longitude;
     }
@@ -185,16 +207,28 @@ using namespace std;
 
         lats = (double*)malloc(numberOfPoints * sizeof(double));
         if (!lats) {
-            fprintf(stderr, "Error: unable to allocate %ld bytes\n", (long)(numberOfPoints * sizeof(double)));
+            auto numBytes = (long)(numberOfPoints * sizeof(double));
+                       std::ostringstream oss;
+                        oss << "Error: unable to allocate " << numBytes << " bytes";
+ 
+                throw MemoryAllocationException(oss.str());
         }
         lons = (double*)malloc(numberOfPoints * sizeof(double));
         if (!lons) {
-            fprintf(stderr, "Error: unable to allocate %ld bytes\n", (long)(numberOfPoints * sizeof(double)));
+            auto numBytes = (long)(numberOfPoints * sizeof(double));
+                       std::ostringstream oss;
+                        oss << "Error: unable to allocate " << numBytes << " bytes";
+ 
+                throw MemoryAllocationException(oss.str());
             free(lats);
         }
         values = (double*)malloc(numberOfPoints * sizeof(double));
         if (!values) {
-            fprintf(stderr, "Error: unable to allocate %ld bytes\n", (long)(numberOfPoints * sizeof(double)));
+            auto numBytes = (long)(numberOfPoints * sizeof(double));
+                       std::ostringstream oss;
+                        oss << "Error: unable to allocate " << numBytes << " bytes";
+ 
+                throw MemoryAllocationException(oss.str());
             free(lats);
             free(lons);
             //return 1;
@@ -216,16 +250,6 @@ using namespace std;
 
         // The schema can be built from a vector of fields, and we do so here.
         schema = arrow::schema({field_lats, field_lons, field_values});
-
-        /*
-        std::shared_ptr<arrow::RecordBatch> rbatch;
-        // The RecordBatch needs the schema, length for columns, which all must match,
-        // and the actual data itself.
-        rbatch = arrow::RecordBatch::Make(schema, numberOfPoints, {latsArray.ValueOrDie(), 
-                                lonsArray.ValueOrDie(), valuesArray.ValueOrDie()});
-
-        */
-        //std::cout << rbatch->ToString();
 
         auto table = arrow::Table::Make(schema, {latsArray.ValueOrDie(), 
                                 lonsArray.ValueOrDie(), valuesArray.ValueOrDie()}, numberOfPoints);
@@ -291,8 +315,8 @@ using namespace std;
         auto err = codes_get_long(h, parameterName.c_str(), &parameterId);
         if(err !=0 ) {
             std::ostringstream oss;
-            oss << "Error calling codes_get_double got error code " << err
-             << " Whilst trying to get key" << parameterName << " in message id " << _message_id
+            oss << "Error calling codes_get_long got error code " << err
+             << " Whilst trying to get key " << parameterName << " in message id " << _message_id
              << " whilst processing file " << _reader->getFilePath();
 
             throw GribException (oss.str());
@@ -384,9 +408,16 @@ using namespace std;
         double parameterId;
         auto err = codes_get_double(h, parameterName.c_str(), &parameterId);
         if(err !=0 ) {
+
+            if(err == -10) {
+                std::cout << "Ret was -10 trying as numeric" << std::endl;
+                //If the return code is -10 the value is a long ?
+                return getNumericParameter(parameterName);
+            }
+
             std::ostringstream oss;
             oss << "Error calling codes_get_double got error code " << err
-            << "Whilst trying to get key" << parameterName << " in message id " << _message_id
+            << "Whilst trying to get key " << parameterName << " in message id " << _message_id
              << " whilst processing file " << _reader->getFilePath();
 
             throw GribException (oss.str());
@@ -402,8 +433,9 @@ using namespace std;
         auto lon2 = getStandardisedLongitudeOfLastPoint();
         auto iDirection = iScansNegatively();
         auto jDirection = jScansPositively();
+        auto numPoints = getNumberOfPoints();
 
-        return std::unique_ptr<GridArea>  (new GridArea(lat1, lon1, lat2, lon2, iDirection, jDirection));
+        return std::unique_ptr<GridArea>  (new GridArea(lat1, lon1, lat2, lon2, iDirection, jDirection, numPoints));
     }
 
     std::vector<double> GribMessage::colToVector(std::shared_ptr<arrow::ChunkedArray> columnArray) {
@@ -447,29 +479,49 @@ using namespace std;
 
             outlats = (double*)malloc(numberOfPoints * sizeof(double));
             if (!outlats) {
-                fprintf(stderr, "Error: unable to allocate %ld bytes\n", (long)(numberOfPoints * sizeof(double)));
+                auto numBytes = (long)(numberOfPoints * sizeof(double));
+                        std::ostringstream oss;
+                            oss << "Error: unable to allocate " << numBytes << " bytes";
+    
+                    throw MemoryAllocationException(oss.str());
             }
             outlons = (double*)malloc(numberOfPoints * sizeof(double));
             if (!outlons) {
-                fprintf(stderr, "Error: unable to allocate %ld bytes\n", (long)(numberOfPoints * sizeof(double)));
+                auto numBytes = (long)(numberOfPoints * sizeof(double));
+                        std::ostringstream oss;
+                            oss << "Error: unable to allocate " << numBytes << " bytes";
+    
+                    throw MemoryAllocationException(oss.str());
                 free(outlats);
             }
             outvalues = (double*)malloc(numberOfPoints * sizeof(double));
             if (!outvalues) {
-                fprintf(stderr, "Error: unable to allocate %ld bytes\n", (long)(numberOfPoints * sizeof(double)));
+                auto numBytes = (long)(numberOfPoints * sizeof(double));
+                        std::ostringstream oss;
+                            oss << "Error: unable to allocate " << numBytes << " bytes";
+    
+                    throw MemoryAllocationException(oss.str());
                 free(outlats);
                 free(outlons);
             }
             distances = (double*)malloc(numberOfPoints * sizeof(double));
             if (!distances) {
-                fprintf(stderr, "Error: unable to allocate %ld bytes\n", (long)(numberOfPoints * sizeof(double)));
+                auto numBytes = (long)(numberOfPoints * sizeof(double));
+                        std::ostringstream oss;
+                            oss << "Error: unable to allocate " << numBytes << " bytes";
+    
+                    throw MemoryAllocationException(oss.str());
                 free(outlats);
                 free(outlons);
                 free(outvalues);
             }
             indexes = (int*)malloc(numberOfPoints * sizeof(int));
             if (!indexes) {
-                fprintf(stderr, "Error: unable to allocate %ld bytes\n", (long)(numberOfPoints * sizeof(int)));
+                auto numBytes = (long)(numberOfPoints * sizeof(double));
+                        std::ostringstream oss;
+                            oss << "Error: unable to allocate " << numBytes << " bytes";
+    
+                    throw MemoryAllocationException(oss.str());
                 free(outlats);
                 free(outlons);
                 free(outvalues);
@@ -523,11 +575,16 @@ using namespace std;
             double *doubleValues;
 
             doubleValues = (double*)malloc(numberOfPoints * sizeof(double));
-            if (!doubleValues) {
-                //fprintf(stderr, "Error: unable to allocate %ld bytes\n", (long)(numberOfPoints * sizeof(double)));
+            if (doubleValues != 0) {
+                auto numBytes = (long)(numberOfPoints * sizeof(double));
+                       std::ostringstream oss;
+                        oss << "Error: unable to allocate " << numBytes << " bytes";
+ 
+                throw MemoryAllocationException(oss.str());
+
             }
 
-            codes_get_double_elements(h, "values", indexes, numberOfPoints, doubleValues);
+            auto ret_code = codes_get_double_elements(h, "values", indexes, numberOfPoints, doubleValues);
 
             auto valuesArray = doubleFieldToArrow(numberOfPoints, doubleValues, true);
 
@@ -537,9 +594,7 @@ using namespace std;
 
             if(conversionFunc.has_value()) {
                 auto func = conversionFunc.value();
-                //std::cout << "PRE CONV" << valuesArray.ValueOrDie()->ToString();
                 valuesArray = func(valuesArray.ValueOrDie());
-                //std::cout << "POST CONV" << valuesArray.ValueOrDie()->ToString();
             }
 
             //Add all the fields from our lookup table first
@@ -579,12 +634,7 @@ using namespace std;
             resultsArray.push_back(location_data->outlonsArray.ValueOrDie());
             resultsArray.push_back(valuesArray.ValueOrDie());
 
-            //auto rbatch = arrow::RecordBatch::Make(schema, numberOfPoints, resultsArrayNew);
-
             auto table = arrow::Table::Make(schema, resultsArray, numberOfPoints);
-
-
-            //std::cout << rbatch->ToString();
 
             return table;
 

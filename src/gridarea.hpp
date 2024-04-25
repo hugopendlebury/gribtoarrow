@@ -3,6 +3,7 @@
 
 #include <functional>
 #include "caster.hpp"
+#include <sstream>
 
 
 using namespace std;
@@ -18,6 +19,8 @@ class GridArea
         const double m_longitudeOfLastPoint;
         const bool m_iScansNegatively;
         const bool m_jScansPositively;
+        const long m_numberOfPoints;
+        friend ostream& operator<<(ostream &os, const  GridArea& a);
 
 
         GridArea(const double latitudeOfFirstPoint, 
@@ -25,12 +28,14 @@ class GridArea
                 const double latitudeOfLastPoint, 
                 const double longitudeOfLastPoint,
                 const bool iScansNegatively,
-                const bool jScansPositively) : m_latitudeOfFirstPoint(latitudeOfFirstPoint),
+                const bool jScansPositively,
+                const long numberOfPoints) : m_latitudeOfFirstPoint(latitudeOfFirstPoint),
                                              m_longitudeOfFirstPoint(longitudeOfFirstPoint),
                                              m_latitudeOfLastPoint(latitudeOfLastPoint),
                                              m_longitudeOfLastPoint(longitudeOfLastPoint),
                                              m_iScansNegatively(iScansNegatively),
-                                             m_jScansPositively(jScansPositively) {}
+                                             m_jScansPositively(jScansPositively),
+                                             m_numberOfPoints(numberOfPoints) {}
 
         // Match all fields incase of collision
         bool operator==(const GridArea& other) const
@@ -40,9 +45,9 @@ class GridArea
                     && m_latitudeOfLastPoint == other.m_latitudeOfLastPoint 
                     && m_longitudeOfLastPoint == other.m_longitudeOfLastPoint
                     && m_iScansNegatively == other.m_iScansNegatively
-                    && m_jScansPositively == other.m_jScansPositively;
+                    && m_jScansPositively == other.m_jScansPositively
+                    && m_numberOfPoints == other.m_numberOfPoints;
         }
-
       
 };
 
@@ -52,9 +57,10 @@ struct hash<GridArea>
 {
     size_t operator()(const GridArea& ga) const noexcept
     {
-        //TODO - Sort this out and maybe add scan direction
-        unsigned long long h = ga.m_latitudeOfFirstPoint * ga.m_longitudeOfFirstPoint * ga.m_latitudeOfLastPoint 
-                * ga.m_longitudeOfLastPoint; 
+
+        unsigned long long h = (ga.m_latitudeOfFirstPoint * ga.m_longitudeOfFirstPoint * ga.m_latitudeOfLastPoint 
+                * ga.m_longitudeOfLastPoint) + (ga.m_numberOfPoints * (ga.m_iScansNegatively == 0 ? 10 : ga.m_iScansNegatively)
+                * (ga.m_jScansPositively == 0 ? 10 : ga.m_jScansPositively)); 
         return h;
     }
 }; 

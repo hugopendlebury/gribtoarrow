@@ -43,7 +43,7 @@ GribReader::GribReader(string filepath) : filepath(filepath) {
                     NULL, 
                     -999l);
     fin = fopen(filepath.c_str(), "rb");
-    if (!fin) {
+    if (!fin || fin == NULL) {
         throw NoSuchGribFileException(filepath);
     } 
 };
@@ -433,7 +433,7 @@ std::shared_ptr<arrow::Table> GribReader::getLocations(std::unique_ptr<GridArea>
             if (scanner.ok()) {
             // Perform the Scan and make a Table with the result
                 auto result = scanner.ValueUnsafe()->ToTable();
-                cout << "Successfully filtered location table" << endl;
+                cout << "Successfully filtered location table for area " << ga << endl;
                 auto filteredResults = result.ValueOrDie();
                 cout << "Filtered table has "<< filteredResults.get()->num_rows() << " rows" << endl;
                 locations_in_area.emplace(std::make_pair(ga, filteredResults));
